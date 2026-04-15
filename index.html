@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Catavision+ · GMAO Catana</title>
+    <title>Catavision+ · GMAO Catana (Firebase)</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #eef2f5; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; padding: 20px; }
@@ -95,11 +95,43 @@
         <div class="software-title"><div class="main">⚓ Catavision+ GMAO</div></div>
     </div>
     <div id="tabContents"></div>
-    <div class="footer">GMAO intégrale – Stockage local (localStorage)</div>
+    <div class="footer">Synchronisation Firebase en temps réel</div>
 </div>
 <div id="errorMsg"></div>
 
-<script>
+<!-- MODAL INTERVENTION -->
+<div id="interventionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Détails de l'intervention</h3><button class="close-modal" onclick="closeInterventionModal()">&times;</button></div>
+        <div id="modalInterventionBody">
+            <label>Machine :</label><span id="modalMachine"></span>
+            <label>Date :</label><span id="modalDate"></span>
+            <label>Type :</label><span id="modalType"></span>
+            <label>Matériel nécessaire :</label><input type="text" id="modalMateriel" placeholder="ex: roulements, graisse">
+            <label>Temps d'intervention :</label><input type="text" id="modalTemps" placeholder="ex: 2h30">
+            <label>Gamme de maintenance :</label><div id="modalGamme" class="gamme-preview"></div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+            <button class="btn-secondary" onclick="closeInterventionModal()">Annuler</button>
+            <button id="modalSaveInterventionBtn">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE GLOBALE -->
+<div id="globalModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 id="modalTitle">Titre</h3><button class="close-modal" onclick="closeModal()">&times;</button></div>
+        <div id="modalBody"></div>
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+            <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+            <button id="modalSaveBtn">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script type="module">
     // Afficher les erreurs dans la page
     window.onerror = function(msg, url, line, col, error) {
         var errorMsg = document.getElementById('errorMsg');
@@ -109,19 +141,31 @@
         return false;
     };
 
-    // ==================== STORAGE ====================
-    const STORAGE = { 
-        equipements: 'catavision_equipements', pieces: 'catavision_pieces', fournisseurs: 'catavision_fournisseurs', commandes: 'catavision_commandes', preventifs: 'catavision_preventifs', pannes: 'catavision_pannes', gammesOp: 'catavision_gammes_operateurs', gammesMaint: 'catavision_gammes_maintenance', signaux: 'catavision_signaux', lastOpReport: 'catavision_last_op_report', interventionsPerso: 'catavision_interventions_perso', excludedInterventions: 'catavision_excluded_interventions', interventionDetails: 'catavision_intervention_details', alertePanneIgnored: 'catavision_alerte_panne_ignoree',
-        consommables: 'catavision_consommables', historiquePannes: 'catavision_historique_pannes'
+    // ==================== CONFIGURATION FIREBASE ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCTsm8SFQLNsZzZiTpF9muNBSOuTRZuWKQ",
+        authDomain: "catavision-gmao-sync.firebaseapp.com",
+        projectId: "catavision-gmao-sync",
+        storageBucket: "catavision-gmao-sync.firebasestorage.app",
+        messagingSenderId: "586836958201",
+        appId: "1:586836958201:web:598e83d6d5c278a9bf7b28"
     };
-    function getData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
-    function setData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
-    
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function sauvegarderCollection(nom, data) { await setDoc(doc(db, "userData", nom), { data: data }); }
+    async function chargerCollection(nom) { const snap = await getDoc(doc(db, "userData", nom)); return snap.exists() ? snap.data().data : []; }
+    function ecouterCollection(nom, callback) { return onSnapshot(doc(db, "userData", nom), (snap) => { callback(snap.exists() ? snap.data().data : []); }); }
+
     // ==================== DONNÉES FIXES GANTT ====================
     const MACHINES_LIST = ["Biesse 1","Biesse 2","Biesse 3","Biesse 4","Biesse 5","Biesse 6","Jade 240","Stream A","Eastman 1","Eastman 2"];
     const GANTT_DATA = {
         machines: MACHINES_LIST,
-        all_days: (function() { let dates = []; let start = new Date(2026, 3, 7); let end = new Date(2026, 6, 31); for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10)); return dates; })(),
+        all_days: (() => { let dates = []; let start = new Date(2026, 3, 7); let end = new Date(2026, 6, 31); for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10)); return dates; })(),
         school_days: ["2026-06-10","2026-06-08","2026-06-12","2026-06-15","2026-06-19","2026-06-09","2026-06-18","2026-06-17","2026-06-16","2026-06-11"],
         holidays: ["2026-05-14","2026-04-30","2026-05-11","2026-05-01","2026-05-25","2026-05-08","2026-05-15"],
         data: {
@@ -138,45 +182,67 @@
         }
     };
 
-    // Initialisation des données par défaut
-    function initEquipements() { if (getData(STORAGE.equipements).length === 0) { const equipments = MACHINES_LIST.map((nom, idx) => ({ id: idx+1, nom, ref: nom.replace(/\s/g,'').toUpperCase(), localisation: "Atelier Principal", miseService: "2020-01-01", statut: "En fonctionnement" })); setData(STORAGE.equipements, equipments); } }
-    function initOtherData() {
-        if (!localStorage.getItem(STORAGE.pieces)) setData(STORAGE.pieces, [{ id:1, nom:"Courroie trapézoïdale", ref:"CT-100", stock:12, seuil:5, fournisseurPref:"Catana" }]);
-        if (!localStorage.getItem(STORAGE.fournisseurs)) setData(STORAGE.fournisseurs, [{ id:1, nom:"Catana Fournitures", contact:"Jean", tel:"0123456789", email:"contact@catana.com" }]);
-        if (!localStorage.getItem(STORAGE.commandes)) setData(STORAGE.commandes, []);
-        if (!localStorage.getItem(STORAGE.pannes)) setData(STORAGE.pannes, []);
-        if (!localStorage.getItem(STORAGE.preventifs)) setData(STORAGE.preventifs, []);
-        if (!localStorage.getItem(STORAGE.gammesOp)) { let def={}; MACHINES_LIST.forEach(m=>{ def[m]=["Nettoyage général","Vérification visuelle","Test fonctionnement"]; }); setData(STORAGE.gammesOp, def); }
-        if (!localStorage.getItem(STORAGE.gammesMaint)) { let def={}; MACHINES_LIST.forEach(m=>{ def[m]=["Inspection mécanique","Lubrification","Vérification électrique","Test final"]; }); setData(STORAGE.gammesMaint, def); }
-        if (!localStorage.getItem(STORAGE.signaux)) setData(STORAGE.signaux, []);
-        if (!localStorage.getItem(STORAGE.lastOpReport)) setData(STORAGE.lastOpReport, {});
-        if (!localStorage.getItem(STORAGE.alertePanneIgnored)) setData(STORAGE.alertePanneIgnored, false);
-        if (!localStorage.getItem(STORAGE.interventionsPerso)) setData(STORAGE.interventionsPerso, []);
-        if (!localStorage.getItem(STORAGE.excludedInterventions)) setData(STORAGE.excludedInterventions, []);
-        if (!localStorage.getItem(STORAGE.interventionDetails)) setData(STORAGE.interventionDetails, {});
-        if (!localStorage.getItem(STORAGE.consommables)) setData(STORAGE.consommables, []);
-        if (!localStorage.getItem(STORAGE.historiquePannes)) setData(STORAGE.historiquePannes, []);
+    // Initialisation des données par défaut (seulement si vides)
+    async function initDefaultData() {
+        if ((await chargerCollection("equipements")).length === 0) {
+            await sauvegarderCollection("equipements", MACHINES_LIST.map((nom, idx) => ({ id: idx+1, nom, ref: nom.replace(/\s/g,'').toUpperCase(), localisation: "Atelier Principal", miseService: "2020-01-01", statut: "En fonctionnement" })));
+        }
+        if ((await chargerCollection("pieces")).length === 0) {
+            await sauvegarderCollection("pieces", [{ id:1, nom:"Courroie trapézoïdale", ref:"CT-100", stock:12, seuil:5, fournisseurPref:"Catana" }]);
+        }
+        if ((await chargerCollection("fournisseurs")).length === 0) {
+            await sauvegarderCollection("fournisseurs", [{ id:1, nom:"Catana Fournitures", contact:"Jean", tel:"0123456789", email:"contact@catana.com" }]);
+        }
+        if ((await chargerCollection("pannes")).length === 0) await sauvegarderCollection("pannes", []);
+        if ((await chargerCollection("preventifs")).length === 0) await sauvegarderCollection("preventifs", []);
+        if (Object.keys(await chargerCollection("gammesOp")).length === 0) {
+            let def = {}; MACHINES_LIST.forEach(m => { def[m] = ["Nettoyage général","Vérification visuelle","Test fonctionnement"]; });
+            await sauvegarderCollection("gammesOp", def);
+        }
+        if (Object.keys(await chargerCollection("gammesMaint")).length === 0) {
+            let def = {}; MACHINES_LIST.forEach(m => { def[m] = ["Inspection mécanique","Lubrification","Vérification électrique","Test final"]; });
+            await sauvegarderCollection("gammesMaint", def);
+        }
+        if ((await chargerCollection("signaux")).length === 0) await sauvegarderCollection("signaux", []);
+        if (Object.keys(await chargerCollection("lastOpReport")).length === 0) await sauvegarderCollection("lastOpReport", {});
+        if ((await chargerCollection("interventionsPerso")).length === 0) await sauvegarderCollection("interventionsPerso", []);
+        if ((await chargerCollection("excludedInterventions")).length === 0) await sauvegarderCollection("excludedInterventions", []);
+        if (Object.keys(await chargerCollection("interventionDetails")).length === 0) await sauvegarderCollection("interventionDetails", {});
+        if ((await chargerCollection("consommables")).length === 0) await sauvegarderCollection("consommables", []);
+        if ((await chargerCollection("historiquePannes")).length === 0) await sauvegarderCollection("historiquePannes", []);
     }
-    initEquipements(); initOtherData();
-    
-    function getEquipementName(id) { const eq = getData(STORAGE.equipements).find(e=>e.id===id); return eq?eq.nom:"?"; }
-    function getEquipementIdByName(nom) { const eq = getData(STORAGE.equipements).find(e=>e.nom===nom); return eq?eq.id:null; }
+
+    // Variables globales (réactives)
+    let equipements = [];
+    let pieces = [];
+    let fournisseurs = [];
+    let pannes = [];
+    let preventifs = [];
+    let gammesOp = {};
+    let gammesMaint = {};
+    let signaux = [];
+    let lastOpReport = {};
+    let interventionsPerso = [];
+    let excludedInterventions = [];
+    let interventionDetails = {};
+    let consommables = [];
+    let historiquePannes = [];
+
+    // Fonctions utilitaires
+    function getEquipementName(id) { const eq = equipements.find(e=>e.id===id); return eq?eq.nom:"?"; }
+    function getEquipementIdByName(nom) { const eq = equipements.find(e=>e.nom===nom); return eq?eq.id:null; }
     function getRealisePercent() { 
-        const preventifs = getData(STORAGE.preventifs); const pannes = getData(STORAGE.pannes); 
-        const total = preventifs.length + pannes.length; const realisees = preventifs.filter(p=>p.statut==="Réalisé").length + pannes.filter(p=>p.statut==="Résolu").length; 
+        const total = preventifs.length + pannes.length; 
+        const realisees = preventifs.filter(p=>p.statut==="Réalisé").length + pannes.filter(p=>p.statut==="Résolu").length; 
         return { realisees, total, percent: total === 0 ? 100 : Math.round((realisees / total) * 100) }; 
     }
-    
-    // ==================== GESTION CONSOMMABLES ====================
-    function getConsommables() { return getData(STORAGE.consommables); }
-    function saveConsommables(data) { setData(STORAGE.consommables, data); }
-    function ajouterConsommable(machine, nomPiece, reference, dureeJours) {
+
+    // Gestion consommables
+    async function ajouterConsommable(machine, nomPiece, reference, dureeJours) {
         const debut = new Date();
-        const dateAlerteCommande = new Date(debut);
-        dateAlerteCommande.setDate(debut.getDate() + dureeJours);
-        const dateAlerteInstall = new Date(dateAlerteCommande);
-        dateAlerteInstall.setDate(dateAlerteCommande.getDate() + 14);
-        const consommable = {
+        const dateAlerteCommande = new Date(debut); dateAlerteCommande.setDate(debut.getDate() + dureeJours);
+        const dateAlerteInstall = new Date(dateAlerteCommande); dateAlerteInstall.setDate(dateAlerteCommande.getDate() + 14);
+        const newConsom = {
             id: Date.now(),
             machine,
             nomPiece,
@@ -188,94 +254,101 @@
             alerteCommandeEnvoyee: false,
             alerteInstallEnvoyee: false
         };
-        const list = getConsommables();
-        list.push(consommable);
-        saveConsommables(list);
+        await sauvegarderCollection("consommables", [...consommables, newConsom]);
     }
-    function supprimerConsommable(id) {
-        let list = getConsommables();
-        list = list.filter(c => c.id !== id);
-        saveConsommables(list);
-    }
+    async function supprimerConsommable(id) { await sauvegarderCollection("consommables", consommables.filter(c => c.id !== id)); }
     function getAlertesActives() {
         const now = new Date();
-        const consos = getConsommables();
-        const alertesCommande = [];
-        const alertesInstall = [];
-        consos.forEach(c => {
-            const dateCmd = new Date(c.dateAlerteCommande);
-            const dateInst = new Date(c.dateAlerteInstall);
-            if (dateCmd <= now && !c.alerteCommandeEnvoyee) alertesCommande.push(c);
-            if (dateInst <= now && !c.alerteInstallEnvoyee) alertesInstall.push(c);
+        const alertesCommande = [], alertesInstall = [];
+        consommables.forEach(c => {
+            if (new Date(c.dateAlerteCommande) <= now && !c.alerteCommandeEnvoyee) alertesCommande.push(c);
+            if (new Date(c.dateAlerteInstall) <= now && !c.alerteInstallEnvoyee) alertesInstall.push(c);
         });
         return { alertesCommande, alertesInstall };
     }
-    function marquerAlerteEnvoyee(id, type) {
-        let list = getConsommables();
-        const idx = list.findIndex(c => c.id === id);
-        if (idx !== -1) {
-            if (type === 'commande') list[idx].alerteCommandeEnvoyee = true;
-            else if (type === 'install') list[idx].alerteInstallEnvoyee = true;
-            saveConsommables(list);
-        }
+    async function marquerAlerteEnvoyee(id, type) {
+        const newList = consommables.map(c => {
+            if (c.id === id) {
+                if (type === 'commande') return { ...c, alerteCommandeEnvoyee: true };
+                if (type === 'install') return { ...c, alerteInstallEnvoyee: true };
+            }
+            return c;
+        });
+        await sauvegarderCollection("consommables", newList);
     }
-    
-    // ==================== HISTORIQUE PANNES AVEC PHOTOS ====================
-    function getHistorique() { return getData(STORAGE.historiquePannes); }
-    function saveHistorique(hist) { setData(STORAGE.historiquePannes, hist); }
-    function addHistorique(machine, piece, description, imageBase64) {
-        let hist = getHistorique();
-        hist.unshift({ id: Date.now(), date: new Date().toISOString(), machine, piece, description, imageBase64: imageBase64 || null });
-        saveHistorique(hist);
+
+    // Historique pannes
+    async function addHistorique(machine, piece, description, imageBase64) {
+        const newEntry = { id: Date.now(), date: new Date().toISOString(), machine, piece, description, imageBase64: imageBase64 || null };
+        await sauvegarderCollection("historiquePannes", [newEntry, ...historiquePannes]);
     }
-    function deleteHistorique(id) {
-        let hist = getHistorique().filter(h => h.id !== id);
-        saveHistorique(hist);
-    }
-    
-    // ==================== INTERVENTIONS ====================
-    function getExcludedIds() { return getData(STORAGE.excludedInterventions); }
-    function addExcludedId(id) { let list = getExcludedIds(); if (!list.includes(id)) { list.push(id); setData(STORAGE.excludedInterventions, list); } }
+    async function deleteHistorique(id) { await sauvegarderCollection("historiquePannes", historiquePannes.filter(h => h.id !== id)); }
+
+    // Interventions
+    async function addExcludedId(id) { if (!excludedInterventions.includes(id)) await sauvegarderCollection("excludedInterventions", [...excludedInterventions, id]); }
     function getFixedInterventionId(machine, date, type) { return `fixed_${machine}_${date}_${type}`; }
     function getAllActiveInterventions() {
-        const excluded = getExcludedIds(); const active = [];
+        const active = [];
         for (let machine of GANTT_DATA.machines) {
             const mData = GANTT_DATA.data[machine];
-            (mData.maint || []).forEach(date => { const id = getFixedInterventionId(machine, date, 'M'); if (!excluded.includes(id)) active.push({ id, machine, date, type: 'M', source: 'fixe' }); });
-            (mData.check || []).forEach(date => { const id = getFixedInterventionId(machine, date, 'V'); if (!excluded.includes(id)) active.push({ id, machine, date, type: 'V', source: 'fixe' }); });
+            (mData.maint || []).forEach(date => { const id = getFixedInterventionId(machine, date, 'M'); if (!excludedInterventions.includes(id)) active.push({ id, machine, date, type: 'M', source: 'fixe' }); });
+            (mData.check || []).forEach(date => { const id = getFixedInterventionId(machine, date, 'V'); if (!excludedInterventions.includes(id)) active.push({ id, machine, date, type: 'V', source: 'fixe' }); });
         }
-        const perso = getData(STORAGE.interventionsPerso);
-        perso.forEach(inter => { const id = `perso_${inter.id}`; if (!excluded.includes(id)) active.push({ id, machine: inter.machine, date: inter.date, type: inter.type, source: 'perso', originalId: inter.id }); });
+        interventionsPerso.forEach(inter => { const id = `perso_${inter.id}`; if (!excludedInterventions.includes(id)) active.push({ id, machine: inter.machine, date: inter.date, type: inter.type, source: 'perso', originalId: inter.id }); });
         return active;
     }
-    function addIntervention(machine, date, type) { const perso = getData(STORAGE.interventionsPerso); perso.push({ id: Date.now(), machine, date, type, realized: false }); setData(STORAGE.interventionsPerso, perso); refreshMaintenanceViews(); }
-    function deleteIntervention(interventionId, source, originalId) { if (source === 'fixe') addExcludedId(interventionId); else if (source === 'perso') { let perso = getData(STORAGE.interventionsPerso); perso = perso.filter(p => p.id !== originalId); setData(STORAGE.interventionsPerso, perso); } refreshMaintenanceViews(); const container = document.getElementById("allInterventionsContainer"); if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container); }
-    function getInterventionDetails(id) { return getData(STORAGE.interventionDetails)[id] || { materiel: "", temps: "" }; }
-    function saveInterventionDetails(id, materiel, temps) { let d = getData(STORAGE.interventionDetails); d[id] = { materiel, temps }; setData(STORAGE.interventionDetails, d); }
+    async function addIntervention(machine, date, type) { await sauvegarderCollection("interventionsPerso", [...interventionsPerso, { id: Date.now(), machine, date, type, realized: false }]); }
+    async function deleteIntervention(interventionId, source, originalId) {
+        if (source === 'fixe') await addExcludedId(interventionId);
+        else if (source === 'perso') await sauvegarderCollection("interventionsPerso", interventionsPerso.filter(p => p.id !== originalId));
+        refreshMaintenanceViews();
+        const container = document.getElementById("allInterventionsContainer");
+        if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container);
+    }
+    function getInterventionDetails(id) { return interventionDetails[id] || { materiel: "", temps: "" }; }
+    async function saveInterventionDetails(id, materiel, temps) { await sauvegarderCollection("interventionDetails", { ...interventionDetails, [id]: { materiel, temps } }); }
     let currentInterventionId = null;
-    function openInterventionDetails(intervention) { currentInterventionId = intervention.id; document.getElementById("modalMachine").innerText = intervention.machine; document.getElementById("modalDate").innerText = new Date(intervention.date).toLocaleDateString('fr-FR'); document.getElementById("modalType").innerText = intervention.type === 'M' ? 'Maintenance (M)' : 'Vérification visuelle (V)'; const saved = getInterventionDetails(intervention.id); document.getElementById("modalMateriel").value = saved.materiel; document.getElementById("modalTemps").value = saved.temps; const gammesMaint = getData(STORAGE.gammesMaint); const gamme = gammesMaint[intervention.machine] || []; let gammeHtml = ""; if (gamme.length > 0) gammeHtml = gamme.map(step => `• ${step}`).join('<br>'); document.getElementById("modalGamme").innerHTML = gammeHtml; document.getElementById("interventionModal").style.display = "flex"; }
-    function saveCurrentInterventionDetails() { if (currentInterventionId) { saveInterventionDetails(currentInterventionId, document.getElementById("modalMateriel").value, document.getElementById("modalTemps").value); alert("Informations enregistrées."); closeInterventionModal(); refreshMaintenanceViews(); const container = document.getElementById("allInterventionsContainer"); if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container); } }
+    function openInterventionDetails(intervention) {
+        currentInterventionId = intervention.id;
+        document.getElementById("modalMachine").innerText = intervention.machine;
+        document.getElementById("modalDate").innerText = new Date(intervention.date).toLocaleDateString('fr-FR');
+        document.getElementById("modalType").innerText = intervention.type === 'M' ? 'Maintenance (M)' : 'Vérification visuelle (V)';
+        const saved = getInterventionDetails(intervention.id);
+        document.getElementById("modalMateriel").value = saved.materiel;
+        document.getElementById("modalTemps").value = saved.temps;
+        const gamme = gammesMaint[intervention.machine] || [];
+        document.getElementById("modalGamme").innerHTML = gamme.map(step => `• ${step}`).join('<br>');
+        document.getElementById("interventionModal").style.display = "flex";
+    }
+    async function saveCurrentInterventionDetails() {
+        if (currentInterventionId) {
+            await saveInterventionDetails(currentInterventionId, document.getElementById("modalMateriel").value, document.getElementById("modalTemps").value);
+            alert("Informations enregistrées.");
+            closeInterventionModal();
+            refreshMaintenanceViews();
+            const container = document.getElementById("allInterventionsContainer");
+            if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container);
+        }
+    }
     function closeInterventionModal() { document.getElementById("interventionModal").style.display = "none"; }
     function closeModal() { document.getElementById("globalModal").style.display = "none"; }
-    function showModal(title, bodyHtml, onSave) { 
-        document.getElementById("modalTitle").innerText = title; 
-        document.getElementById("modalBody").innerHTML = bodyHtml; 
-        const saveBtn = document.getElementById("modalSaveBtn"); 
-        const newSaveBtn = saveBtn.cloneNode(true);
-        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-        newSaveBtn.onclick = () => { onSave(); closeModal(); }; 
-        document.getElementById("globalModal").style.display = "flex"; 
+    function showModal(title, bodyHtml, onSave) {
+        document.getElementById("modalTitle").innerText = title;
+        document.getElementById("modalBody").innerHTML = bodyHtml;
+        const newSaveBtn = document.getElementById("modalSaveBtn").cloneNode(true);
+        document.getElementById("modalSaveBtn").parentNode.replaceChild(newSaveBtn, document.getElementById("modalSaveBtn"));
+        newSaveBtn.onclick = () => { onSave(); closeModal(); };
+        document.getElementById("globalModal").style.display = "flex";
     }
-    
-    // ==================== VUES MAINTENANCE (TOUS LES ONGLETS) ====================
+
+    // ==================== VUES (similaires à la version locale mais avec données Firebase) ====================
     let currentGammeType = "op";
     let currentMaintTab = "dashboard";
-    
+
     function renderDashboardMaintenance() {
-        const eq = getData(STORAGE.equipements);
-        const tot = eq.length, panne = eq.filter(e=>e.statut==="Panne").length, maint = eq.filter(e=>e.statut==="Maintenance").length, fonctionnel = tot-panne-maint;
-        const pannesActives = getData(STORAGE.pannes).filter(p => p.statut !== "Résolu");
-        let alerteIgnored = getData(STORAGE.alertePanneIgnored) || false;
+        const tot = equipements.length, panne = equipements.filter(e=>e.statut==="Panne").length, maint = equipements.filter(e=>e.statut==="Maintenance").length, fonctionnel = tot-panne-maint;
+        const pannesActives = pannes.filter(p => p.statut !== "Résolu");
+        let alerteIgnored = false; // à gérer plus tard
         let showAlerte = (pannesActives.length > 0 && !alerteIgnored);
         let alerteHtml = showAlerte ? `<div class="alerte-rouge">🚨 ALERTE MAINTENANCE : ${pannesActives.length} panne(s) active(s) ! <button id="stopPanneAlerteBtn" style="background:white;color:black;margin-left:15px;">Arrêter l'alerte</button></div>` : "";
         const { alertesCommande, alertesInstall } = getAlertesActives();
@@ -299,55 +372,50 @@
             ${consommablesHtml}
             <div class="card"><div class="card-header">📅 Interventions du jour (${today}) - cliquables</div><div class="card-body">${todayHtml}</div></div>
             <div class="card"><div class="card-header">⏳ Interventions à venir (7 prochaines dates)</div><div class="card-body">${comingHtml}</div></div>
-            <div class="card"><div class="card-header">🔧 Pannes actives</div><div class="card-body">${pannesActives.length===0?"<p>Aucune panne en cours.</p>":`<table style="width:100%"><thead><th>Machine</th><th>Description</th><th>Date</th><th>Action</th></thead><tbody>${pannesActives.map(pan=>`<tr><td>${getEquipementName(pan.equipementId)}</td><td>${pan.description}</td><td>${new Date(pan.dateDecla).toLocaleString()}</td><td><button class="btn-sm" onclick="resoudrePanneMaintenance(${pan.id})">🔧 Résoudre</button></td>`).join('')}</tbody></table>`}</div></div>
+            <div class="card"><div class="card-header">🔧 Pannes actives</div><div class="card-body">${pannesActives.length===0?"<p>Aucune panne en cours.</p>":`<table style="width:100%"><thead><th>Machine</th><th>Description</th><th>Date</th><th>Action</th></thead><tbody>${pannesActives.map(pan=>`<td><td>${getEquipementName(pan.equipementId)}</td><td>${pan.description}</td><td>${new Date(pan.dateDecla).toLocaleString()}</td><td><button class="btn-sm" onclick="resoudrePanneMaintenance(${pan.id})">🔧 Résoudre</button></td>`).join('')}</tbody></table>`}</div></div>
         `;
         setTimeout(() => {
             const stopBtn = document.getElementById("stopPanneAlerteBtn");
-            if (stopBtn) stopBtn.addEventListener("click", () => { setData(STORAGE.alertePanneIgnored, true); renderDashboardMaintenance(); });
+            if (stopBtn) stopBtn.addEventListener("click", async () => { await sauvegarderCollection("alertePanneIgnored", true); renderDashboardMaintenance(); });
             const ackCommande = document.getElementById("ackCommandeBtn");
-            if (ackCommande) ackCommande.addEventListener("click", () => { getAlertesActives().alertesCommande.forEach(c => marquerAlerteEnvoyee(c.id, 'commande')); renderDashboardMaintenance(); });
+            if (ackCommande) ackCommande.addEventListener("click", async () => { for (let c of alertesCommande) await marquerAlerteEnvoyee(c.id, 'commande'); renderDashboardMaintenance(); });
             const ackInstall = document.getElementById("ackInstallBtn");
-            if (ackInstall) ackInstall.addEventListener("click", () => { getAlertesActives().alertesInstall.forEach(c => marquerAlerteEnvoyee(c.id, 'install')); renderDashboardMaintenance(); });
+            if (ackInstall) ackInstall.addEventListener("click", async () => { for (let c of alertesInstall) await marquerAlerteEnvoyee(c.id, 'install'); renderDashboardMaintenance(); });
         }, 50);
     }
-    
+
     function renderEquipements() { 
-        const equipements = getData(STORAGE.equipements);
-        const container = document.getElementById("maintTabContent");
         let html = `<div class="card"><div class="card-header">🖥️ Liste des équipements</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Localisation</th><th>Mise en service</th><th>Statut</th><th>Actions</th></thead><tbody>${equipements.map(e => `<tr data-id="${e.id}"><td>${escapeHtml(e.nom)}</td><td>${escapeHtml(e.ref)}</td><td>${escapeHtml(e.localisation)}</td><td>${escapeHtml(e.miseService)}</td><td>${escapeHtml(e.statut)}</td><td><button class="btn-sm edit-equipement" data-id="${e.id}">✏️ Modifier</button><button class="btn-sm btn-secondary delete-equipement" data-id="${e.id}">🗑️ Supprimer</button></td></tr>`).join('')}</tbody></table><button id="addEquipementBtn" style="margin-top:16px;">+ Ajouter un équipement</button></div></div>`;
-        container.innerHTML = html;
+        document.getElementById("maintTabContent").innerHTML = html;
         document.querySelectorAll('.edit-equipement').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.getAttribute('data-id')); const equip = equipements.find(e => e.id === id); if (equip) openEquipementModal(equip); }));
-        document.querySelectorAll('.delete-equipement').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.getAttribute('data-id')); if (confirm("Supprimer définitivement cet équipement ?")) { let list = getData(STORAGE.equipements).filter(e => e.id !== id); setData(STORAGE.equipements, list); renderEquipements(); } }));
+        document.querySelectorAll('.delete-equipement').forEach(btn => btn.addEventListener('click', async (e) => { const id = parseInt(btn.getAttribute('data-id')); if (confirm("Supprimer définitivement cet équipement ?")) { const newList = equipements.filter(e => e.id !== id); await sauvegarderCollection("equipements", newList); } }));
         document.getElementById('addEquipementBtn')?.addEventListener('click', () => openEquipementModal(null));
     }
-    
+
     function openEquipementModal(equipement = null) {
         const isEdit = !!equipement;
-        const title = isEdit ? "✏️ Modifier l'équipement" : "➕ Ajouter un équipement";
         const bodyHtml = `<label>Nom :</label><input id="eqNom" value="${escapeHtml(equipement?.nom||'')}"><label>Référence :</label><input id="eqRef" value="${escapeHtml(equipement?.ref||'')}"><label>Localisation :</label><input id="eqLocalisation" value="${escapeHtml(equipement?.localisation||'Atelier Principal')}"><label>Date de mise en service :</label><input id="eqMiseService" type="date" value="${equipement?.miseService||new Date().toISOString().slice(0,10)}"><label>Statut :</label><select id="eqStatut"><option value="En fonctionnement">En fonctionnement</option><option value="Maintenance">Maintenance</option><option value="Panne">Panne</option></select>`;
-        showModal(title, bodyHtml, () => {
+        showModal(isEdit ? "✏️ Modifier l'équipement" : "➕ Ajouter un équipement", bodyHtml, async () => {
             const nom = document.getElementById("eqNom").value.trim();
             const ref = document.getElementById("eqRef").value.trim();
             const localisation = document.getElementById("eqLocalisation").value.trim();
             const miseService = document.getElementById("eqMiseService").value;
             const statut = document.getElementById("eqStatut").value;
             if (!nom) return alert("Le nom est obligatoire.");
-            let equipements = getData(STORAGE.equipements);
+            let newEquipements = [...equipements];
             if (isEdit) {
-                equipement.nom = nom; equipement.ref = ref; equipement.localisation = localisation; equipement.miseService = miseService; equipement.statut = statut;
-                setData(STORAGE.equipements, equipements);
+                const index = newEquipements.findIndex(e => e.id === equipement.id);
+                newEquipements[index] = { ...equipement, nom, ref, localisation, miseService, statut };
             } else {
-                if (equipements.some(e => e.nom === nom)) { alert("Un équipement avec ce nom existe déjà."); return; }
-                const newId = equipements.length ? Math.max(...equipements.map(e => e.id)) + 1 : 1;
-                equipements.push({ id: newId, nom, ref: ref || nom.replace(/\s/g, '').toUpperCase(), localisation: localisation || "Atelier Principal", miseService: miseService || new Date().toISOString().slice(0,10), statut });
-                setData(STORAGE.equipements, equipements);
+                if (newEquipements.some(e => e.nom === nom)) { alert("Un équipement avec ce nom existe déjà."); return; }
+                const newId = newEquipements.length ? Math.max(...newEquipements.map(e => e.id)) + 1 : 1;
+                newEquipements.push({ id: newId, nom, ref: ref || nom.replace(/\s/g, '').toUpperCase(), localisation: localisation || "Atelier Principal", miseService: miseService || new Date().toISOString().slice(0,10), statut });
             }
-            if (currentMaintTab === 'equipements') renderEquipements();
-            else refreshMaintenanceViews();
+            await sauvegarderCollection("equipements", newEquipements);
         });
     }
-    
-    function buildGanttTableWithCustom() {
+
+    function buildGanttTableWithCustom() { /* identique à la version locale */ 
         const container = document.getElementById("ganttContainer"); if(!container) return;
         container.innerHTML = '';
         const table = document.createElement('table'); table.className = 'gantt-table';
@@ -413,7 +481,7 @@
         html+=`</tbody></table>`; container.innerHTML=html;
     }
     function renderPlanningGanttWithCustom() {
-        const machines = getData(STORAGE.equipements).map(e=>e.nom);
+        const machines = equipements.map(e=>e.nom);
         const html=`<div class="card"><div class="card-header">➕ Ajouter une intervention personnalisée</div><div class="card-body"><div class="form-row"><div><label>Machine :</label><select id="customMachineSelect">${machines.map(m=>`<option value="${m}">${m}</option>`).join('')}</select></div><div><label>Date :</label><input type="date" id="customDate" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Type :</label><select id="customType"><option value="M">Maintenance (M)</option><option value="V">Vérification visuelle (V)</option></select></div></div><button id="btnAddCustomIntervention">📌 Ajouter l'intervention</button></div></div><div class="card"><div class="card-header">📅 Planning Gantt - Maintenance Préventive (cliquez sur M ou V)</div><div class="card-body"><div class="gantt-wrapper" id="ganttContainer"></div><div class="legend" id="legendContainer"></div></div></div><div class="card"><div class="card-header">📋 Gestion complète des interventions</div><div class="card-body"><button id="btnShowAllInterventions" class="btn-secondary">Voir / Supprimer toutes les interventions</button><div id="allInterventionsContainer" style="margin-top:16px;"></div></div></div>`;
         document.getElementById("maintTabContent").innerHTML=html;
         setTimeout(()=>{
@@ -422,20 +490,18 @@
             document.getElementById("btnShowAllInterventions")?.addEventListener("click",()=>{ const container=document.getElementById("allInterventionsContainer"); if(container) renderAllInterventionsListInContainer(container); });
         },10);
     }
-    function stockFull() { let data = getData(STORAGE.pieces); return `<div class="card"><div class="card-header">Stock</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Stock</th><th>Seuil</th><th>Actions</th></thead><tbody>${data.map(p=>`<tr><td>${p.nom}</td><td>${p.ref}</td><td>${p.stock}</td><td>${p.seuil}</td><td><button class="btn-sm" onclick="ajusterStock(${p.id})">📦</button><button class="btn-sm" onclick="editPiece(${p.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deletePiece(${p.id})">🗑️</button></td></tr>`).join('')}</tbody></table><button onclick="openPieceModal()">+ Pièce</button></div></div>`; }
-    function achatsFull() { let data = getData(STORAGE.fournisseurs); return `<div class="card"><div class="card-header">Fournisseurs</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Contact</th><th>Actions</th></thead><tbody>${data.map(f=>`<tr><td>${f.nom}</td><td>${f.contact||'-'}</td><td><button class="btn-sm" onclick="editFournisseur(${f.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deleteFournisseur(${f.id})">🗑️</button></td></tr>`).join('')}</tbody></table><button onclick="openFournisseurModal()">+ Fournisseur</button></div></div>`; }
-    function gammesFull() { const storageKey = currentGammeType === 'op' ? STORAGE.gammesOp : STORAGE.gammesMaint; const gammes = getData(storageKey); const machinesUniques = getData(STORAGE.equipements).map(e=>e.nom); let html = `<div class="card"><div class="card-header">Gammes ${currentGammeType === 'op' ? 'Opérateurs' : 'Maintenance'}</div><div class="card-body"><div class="gamme-switch"><button id="switchToOp" class="btn-sm ${currentGammeType === 'op' ? '' : 'btn-secondary'}">👤 Gamme Opérateur</button><button id="switchToMaint" class="btn-sm ${currentGammeType === 'maint' ? '' : 'btn-secondary'}">🔧 Gamme Maintenance</button></div>${machinesUniques.map(m => { const etapes = gammes[m] || []; return `<div class="machine-gamme"><strong>${m}</strong> : ${etapes.length} étapes<ul>${etapes.map(e=>`<li>${e}</li>`).join('')}</ul><button class="btn-sm" onclick="editGammePrompt('${m}')">✏️ Modifier</button></div>`; }).join('')}</div></div>`; return html; }
-    function renderGestionUtilisateurs() {
-        let users = getData(STORAGE.users);
-        if (!users.length) users = [{ id: "admin", name: "Administrateur", role: "admin" }];
-        let html = `<div class="card"><div class="card-header">👥 Gestion des utilisateurs (simplifiée)</div><div class="card-body"><p>Cette version ne gère pas l'authentification. Vous pouvez ajouter des utilisateurs pour information.</p><button id="btnAddUser">+ Ajouter un utilisateur</button><table style="margin-top:16px; width:100%"><thead><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Actions</th></thead><tbody>${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.id)}</td><td>${u.role}</td><td><button class="btn-sm btn-secondary" onclick="deleteUser('${u.id}')">🗑️ Supprimer</button></td></tr>`).join('')}</tbody></table></div></div>`;
-        document.getElementById("maintTabContent").innerHTML = html;
-        document.getElementById("btnAddUser")?.addEventListener("click", () => { let name = prompt("Nom complet"); if(name){ let id = prompt("Identifiant (login)"); if(id){ let role = prompt("Rôle (admin, user)", "user"); let users = getData(STORAGE.users); users.push({ id, name, role }); setData(STORAGE.users, users); renderGestionUtilisateurs(); } } });
-        window.deleteUser = (id) => { let users = getData(STORAGE.users).filter(u => u.id !== id); setData(STORAGE.users, users); renderGestionUtilisateurs(); };
+    function stockFull() { return `<div class="card"><div class="card-header">Stock</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Stock</th><th>Seuil</th><th>Actions</th></thead><tbody>${pieces.map(p=>`<tr><td>${p.nom}</td><td>${p.ref}</td><td>${p.stock}</td><td>${p.seuil}</td><td><button class="btn-sm" onclick="ajusterStock(${p.id})">📦</button><button class="btn-sm" onclick="editPiece(${p.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deletePiece(${p.id})">🗑️</button></td></tr>`).join('')}</tbody></table><button onclick="openPieceModal()">+ Pièce</button></div></div>`; }
+    function achatsFull() { return `<div class="card"><div class="card-header">Fournisseurs</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Contact</th><th>Actions</th></thead><tbody>${fournisseurs.map(f=>`<tr><td>${f.nom}</td><td>${f.contact||'-'}</td><td><button class="btn-sm" onclick="editFournisseur(${f.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deleteFournisseur(${f.id})">🗑️</button></td></tr>`).join('')}</tbody></table><button onclick="openFournisseurModal()">+ Fournisseur</button></div></div>`; }
+    function gammesFull() {
+        const gammes = currentGammeType === 'op' ? gammesOp : gammesMaint;
+        const machinesUniques = equipements.map(e=>e.nom);
+        let html = `<div class="card"><div class="card-header">Gammes ${currentGammeType === 'op' ? 'Opérateurs' : 'Maintenance'}</div><div class="card-body"><div class="gamme-switch"><button id="switchToOp" class="btn-sm ${currentGammeType === 'op' ? '' : 'btn-secondary'}">👤 Gamme Opérateur</button><button id="switchToMaint" class="btn-sm ${currentGammeType === 'maint' ? '' : 'btn-secondary'}">🔧 Gamme Maintenance</button></div>${machinesUniques.map(m => { const etapes = gammes[m] || []; return `<div class="machine-gamme"><strong>${m}</strong> : ${etapes.length} étapes<ul>${etapes.map(e=>`<li>${e}</li>`).join('')}</ul><button class="btn-sm" onclick="editGammePrompt('${m}')">✏️ Modifier</button></div>`; }).join('')}</div></div>`;
+        return html;
     }
+    function renderGestionUtilisateurs() { document.getElementById("maintTabContent").innerHTML = `<div class="card"><div class="card-header">👥 Utilisateurs (synchronisation Firebase)</div><div class="card-body"><p>Les données sont partagées en temps réel entre tous vos appareils.</p></div></div>`; }
     function renderConsommables() {
-        const machines = getData(STORAGE.equipements).map(e => e.nom);
-        const consos = getConsommables();
+        const machines = equipements.map(e => e.nom);
+        const consos = consommables;
         let formHtml = `<div class="card"><div class="card-header">➕ Ajouter un suivi consommable</div><div class="card-body"><div class="form-row"><div><label>Machine :</label><select id="consoMachine">${machines.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div><div><label>Nom pièce :</label><input id="consoNom" placeholder="Ex: Filtre hydraulique"></div><div><label>Référence :</label><input id="consoRef" placeholder="Ex: FH-2100"></div><div><label>Durée (jours) :</label><input id="consoDuree" type="number" min="1" value="30"></div></div><button id="btnAjouterConsommable">📌 Ajouter le suivi</button></div></div>`;
         let listeHtml = `<div class="card"><div class="card-header">📋 Liste des suivis consommables</div><div class="card-body">`;
         if (consos.length === 0) listeHtml += `<div class="empty-state">Aucun consommable enregistré.</div>`;
@@ -464,63 +530,51 @@
         }
         calendrierHtml += `</div></div></div>`;
         document.getElementById("maintTabContent").innerHTML = formHtml + listeHtml + calendrierHtml;
-        document.getElementById("btnAjouterConsommable")?.addEventListener("click", () => {
+        document.getElementById("btnAjouterConsommable")?.addEventListener("click", async () => {
             const machine = document.getElementById("consoMachine").value;
             const nom = document.getElementById("consoNom").value.trim();
             const ref = document.getElementById("consoRef").value.trim();
             const duree = parseInt(document.getElementById("consoDuree").value);
             if (!machine || !nom || !ref || isNaN(duree) || duree < 1) { alert("Veuillez remplir tous les champs correctement."); return; }
-            ajouterConsommable(machine, nom, ref, duree);
-            renderConsommables();
+            await ajouterConsommable(machine, nom, ref, duree);
         });
     }
     function renderHistoriquePannes(container) {
-        let historique = getHistorique();
         let filterText = '';
-        const render = () => {
+        container.innerHTML = `
+            <div class="card"><div class="card-header">📸 Ajouter une panne à l'historique (photo + pièce)</div><div class="card-body"><div class="form-row"><div><label>Machine :</label><select id="histMachine">${equipements.map(e=>`<option value="${e.nom}">${e.nom}</option>`).join('')}</select></div><div><label>Nom de la pièce (mot-clé) :</label><input type="text" id="histPiece" placeholder="ex: Courroie, Moteur..."></div></div><label>Description détaillée :</label><textarea id="histDescription" rows="2" placeholder="Cause, remède, remarques..."></textarea><label>Photo (appareil ou galerie) :</label><input type="file" id="histPhoto" accept="image/*" capture="environment"><div id="photoPreview"></div><button id="btnSaveHistorique">📌 Ajouter à l'historique</button></div></div>
+            <div class="card"><div class="card-header">🔍 Recherche (pièce, machine, description)</div><div class="card-body"><input type="text" id="searchHistorique" placeholder="🔎 Ex: Courroie, Biesse..." class="search-bar"></div></div>
+            <div class="card"><div class="card-header" id="historiqueCountHeader">📜 Historique des pannes</div><div class="card-body" id="historiqueListContainer"></div></div>
+        `;
+        const searchInput = document.getElementById("searchHistorique");
+        const listContainer = document.getElementById("historiqueListContainer");
+        const countHeader = document.getElementById("historiqueCountHeader");
+        const updateList = () => {
             const searchTerm = filterText.toLowerCase();
-            const filtered = historique.filter(h => h.machine.toLowerCase().includes(searchTerm) || h.piece.toLowerCase().includes(searchTerm) || h.description.toLowerCase().includes(searchTerm));
-            container.innerHTML = `
-                <div class="card"><div class="card-header">📸 Ajouter une panne à l'historique (photo + pièce)</div><div class="card-body"><div class="form-row"><div><label>Machine :</label><select id="histMachine">${getData(STORAGE.equipements).map(e=>`<option value="${e.nom}">${e.nom}</option>`).join('')}</select></div><div><label>Nom de la pièce (mot-clé) :</label><input type="text" id="histPiece" placeholder="ex: Courroie, Moteur..."></div></div><label>Description détaillée :</label><textarea id="histDescription" rows="2" placeholder="Cause, remède, remarques..."></textarea><label>Photo (appareil ou galerie) :</label><input type="file" id="histPhoto" accept="image/*" capture="environment"><div id="photoPreview"></div><button id="btnSaveHistorique">📌 Ajouter à l'historique</button></div></div>
-                <div class="card"><div class="card-header">🔍 Recherche (pièce, machine, description)</div><div class="card-body"><input type="text" id="searchHistorique" placeholder="🔎 Ex: Courroie, Biesse..." class="search-bar"></div></div>
-                <div class="card"><div class="card-header" id="historiqueCountHeader">📜 Historique des pannes (${filtered.length} entrées)</div><div class="card-body"><div class="historique-grid">${filtered.length === 0 ? '<div class="empty-state">Aucune panne historique trouvée.</div>' : filtered.map(pan => `<div class="panne-card">${pan.imageBase64 ? `<img src="${pan.imageBase64}" class="panne-image">` : '<div class="panne-image" style="background:#eef2f5; display:flex; align-items:center; justify-content:center;">📷</div>'}<div class="panne-infos"><strong>🖥️ ${escapeHtml(pan.machine)}</strong> &nbsp;| 🔧 Pièce: <strong>${escapeHtml(pan.piece)}</strong><br>📅 ${new Date(pan.date).toLocaleString('fr-FR')}<br><strong>Description :</strong><br> ${escapeHtml(pan.description)}<br><button class="btn-sm btn-secondary" onclick="supprimerHistorique(${pan.id})">🗑️ Supprimer</button></div></div>`).join('')}</div></div></div>
-            `;
-            document.getElementById("searchHistorique")?.addEventListener("input", (e) => { filterText = e.target.value; render(); });
-            document.getElementById("btnSaveHistorique")?.addEventListener("click", async () => {
-                const machine = document.getElementById("histMachine").value;
-                const piece = document.getElementById("histPiece").value.trim();
-                const description = document.getElementById("histDescription").value.trim();
-                if (!machine || !piece || !description) { alert("Veuillez remplir machine, pièce et description."); return; }
-                const fileInput = document.getElementById("histPhoto");
-                let imageBase64 = null;
-                if (fileInput.files && fileInput.files[0]) {
-                    imageBase64 = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.readAsDataURL(fileInput.files[0]);
-                    });
-                }
-                addHistorique(machine, piece, description, imageBase64);
-                historique = getHistorique();
-                document.getElementById("histPiece").value = "";
-                document.getElementById("histDescription").value = "";
-                document.getElementById("histPhoto").value = "";
-                document.getElementById("photoPreview").innerHTML = "";
-                render();
-            });
-            document.getElementById("histPhoto")?.addEventListener("change", (e) => {
-                const preview = document.getElementById("photoPreview");
-                if (e.target.files && e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" class="photo-preview" style="max-width:100px;">`; };
-                    reader.readAsDataURL(e.target.files[0]);
-                } else preview.innerHTML = "";
-            });
+            const filtered = historiquePannes.filter(h => h.machine.toLowerCase().includes(searchTerm) || h.piece.toLowerCase().includes(searchTerm) || h.description.toLowerCase().includes(searchTerm));
+            countHeader.innerText = `📜 Historique des pannes (${filtered.length} entrées)`;
+            if (filtered.length === 0) { listContainer.innerHTML = '<div class="empty-state">Aucune panne historique trouvée.</div>'; return; }
+            listContainer.innerHTML = `<div class="historique-grid">${filtered.map(pan => `<div class="panne-card">${pan.imageBase64 ? `<img src="${pan.imageBase64}" class="panne-image">` : '<div class="panne-image" style="background:#eef2f5; display:flex; align-items:center; justify-content:center;">📷</div>'}<div class="panne-infos"><strong>🖥️ ${escapeHtml(pan.machine)}</strong> &nbsp;| 🔧 Pièce: <strong>${escapeHtml(pan.piece)}</strong><br>📅 ${new Date(pan.date).toLocaleString('fr-FR')}<br><strong>Description :</strong><br> ${escapeHtml(pan.description)}<br><button class="btn-sm btn-secondary" onclick="supprimerHistorique(${pan.id})">🗑️ Supprimer</button></div></div>`).join('')}</div>`;
         };
-        render();
-        window.supprimerHistorique = (id) => { if(confirm("Supprimer cette entrée ?")) { deleteHistorique(id); historique = getHistorique(); render(); } };
+        searchInput.addEventListener("input", (e) => { filterText = e.target.value; updateList(); });
+        document.getElementById("btnSaveHistorique").addEventListener("click", async () => {
+            const machine = document.getElementById("histMachine").value, piece = document.getElementById("histPiece").value.trim(), description = document.getElementById("histDescription").value.trim();
+            if (!machine || !piece || !description) { alert("Veuillez remplir machine, pièce et description."); return; }
+            const fileInput = document.getElementById("histPhoto");
+            let imageBase64 = null;
+            if (fileInput.files && fileInput.files[0]) { imageBase64 = await new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => resolve(e.target.result); reader.readAsDataURL(fileInput.files[0]); }); }
+            await addHistorique(machine, piece, description, imageBase64);
+            document.getElementById("histPiece").value = ""; document.getElementById("histDescription").value = ""; document.getElementById("histPhoto").value = ""; document.getElementById("photoPreview").innerHTML = "";
+            updateList();
+        });
+        document.getElementById("histPhoto").addEventListener("change", (e) => {
+            const preview = document.getElementById("photoPreview");
+            if (e.target.files && e.target.files[0]) { const reader = new FileReader(); reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" class="photo-preview" style="max-width:100px;">`; }; reader.readAsDataURL(e.target.files[0]); } else preview.innerHTML = "";
+        });
+        updateList();
+        window.supprimerHistorique = async (id) => { if(confirm("Supprimer cette entrée ?")) { await deleteHistorique(id); updateList(); } };
     }
-    
+
     function refreshMaintenanceViews() {
         if (currentMaintTab === 'preventif') { if (document.getElementById("ganttContainer")) buildGanttTableWithCustom(); if (document.getElementById("legendContainer")) buildLegendStatic(); const container = document.getElementById("allInterventionsContainer"); if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container); }
         if (currentMaintTab === 'dashboard') renderDashboardMaintenance();
@@ -532,9 +586,9 @@
         if (currentMaintTab === 'gammes') document.getElementById("maintTabContent").innerHTML = gammesFull();
         if (currentMaintTab === 'users') renderGestionUtilisateurs();
     }
-    
+
     function renderMaintenance() {
-        let html = `<div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;"><button class="reset-btn" onclick="resetGamme('op')">🔄 Réinit. gamme opérateur</button><button class="reset-btn" onclick="resetGamme('maint')">🔄 Réinit. gamme maintenance</button><button class="reset-btn" onclick="resetStock()">🔄 Réinit. stock</button></div><div class="tabs" id="maintTabs"><button class="tab-btn" data-tab="dashboard">📊 Dashboard</button><button class="tab-btn" data-tab="equipements">🖥️ Équipements</button><button class="tab-btn" data-tab="preventif">📅 Planning Gantt & Interventions</button><button class="tab-btn" data-tab="stock">📦 Stock</button><button class="tab-btn" data-tab="achats">🛒 Achats</button><button class="tab-btn" data-tab="gammes">📋 Gammes</button><button class="tab-btn" data-tab="users">👥 Gestion utilisateurs</button><button class="tab-btn" data-tab="consommables">⏳ Consommables</button><button class="tab-btn" data-tab="historique">📸 Historique Pannes</button></div><div id="maintTabContent"></div>`;
+        let html = `<div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;"><button class="reset-btn" onclick="resetGamme('op')">🔄 Réinit. gamme opérateur</button><button class="reset-btn" onclick="resetGamme('maint')">🔄 Réinit. gamme maintenance</button><button class="reset-btn" onclick="resetStock()">🔄 Réinit. stock</button></div><div class="tabs" id="maintTabs"><button class="tab-btn" data-tab="dashboard">📊 Dashboard</button><button class="tab-btn" data-tab="equipements">🖥️ Équipements</button><button class="tab-btn" data-tab="preventif">📅 Planning Gantt & Interventions</button><button class="tab-btn" data-tab="stock">📦 Stock</button><button class="tab-btn" data-tab="achats">🛒 Achats</button><button class="tab-btn" data-tab="gammes">📋 Gammes</button><button class="tab-btn" data-tab="users">👥 Utilisateurs</button><button class="tab-btn" data-tab="consommables">⏳ Consommables</button><button class="tab-btn" data-tab="historique">📸 Historique Pannes</button></div><div id="maintTabContent"></div>`;
         document.getElementById("tabContents").innerHTML = html;
         function loadTab(tabId) {
             currentMaintTab = tabId;
@@ -562,42 +616,62 @@
             if(switchMaint) switchMaint.addEventListener("click",()=>{ currentGammeType="maint"; renderMaintenance(); });
         }
     }
-    
-    // ==================== FONCTIONS GLOBALES ====================
-    window.resoudrePanneMaintenance = (id) => {
-        let pannes = getData(STORAGE.pannes);
+
+    // Fonctions globales exposées (nécessaires pour les boutons onclick)
+    window.resoudrePanneMaintenance = async (id) => {
         let panne = pannes.find(p => p.id === id);
         if(panne && panne.statut !== "Résolu") {
             panne.statut = "Résolu"; panne.dateResolution = new Date().toISOString();
-            setData(STORAGE.pannes, pannes);
-            const autresPannes = pannes.filter(p => p.equipementId === panne.equipementId && p.statut !== "Résolu" && p.id !== id);
-            if (autresPannes.length === 0) { let eq = getData(STORAGE.equipements).map(e => e.id === panne.equipementId ? { ...e, statut: "En fonctionnement" } : e); setData(STORAGE.equipements, eq); }
-            if (!getData(STORAGE.pannes).some(p => p.statut !== "Résolu")) setData(STORAGE.alertePanneIgnored, false);
-            alert("Panne résolue."); renderMaintenance();
+            const newPannes = pannes.map(p => p.id === id ? panne : p);
+            await sauvegarderCollection("pannes", newPannes);
+            const autresPannes = newPannes.filter(p => p.equipementId === panne.equipementId && p.statut !== "Résolu" && p.id !== id);
+            if (autresPannes.length === 0) {
+                const newEquip = equipements.map(e => e.id === panne.equipementId ? { ...e, statut: "En fonctionnement" } : e);
+                await sauvegarderCollection("equipements", newEquip);
+            }
+            alert("Panne résolue.");
         } else alert("Déjà résolue.");
     };
-    window.editGammePrompt = (machine) => {
-        const storageKey = currentGammeType === 'op' ? STORAGE.gammesOp : STORAGE.gammesMaint;
-        let gammes = getData(storageKey);
+    window.editGammePrompt = async (machine) => {
+        const key = currentGammeType === 'op' ? 'gammesOp' : 'gammesMaint';
+        let gammes = currentGammeType === 'op' ? gammesOp : gammesMaint;
         let current = gammes[machine] || [];
         let newEtapes = prompt("Modifier les étapes (séparées par des virgules) :", current.join(", "));
-        if (newEtapes !== null) { gammes[machine] = newEtapes.split(",").map(s=>s.trim()).filter(s=>s); setData(storageKey, gammes); renderMaintenance(); }
+        if (newEtapes !== null) { const newGammes = { ...gammes, [machine]: newEtapes.split(",").map(s=>s.trim()).filter(s=>s) }; await sauvegarderCollection(key, newGammes); }
     };
-    window.ajusterStock = (id) => { let pieces = getData(STORAGE.pieces); let p = pieces.find(p=>p.id===id); if(p){ let q = prompt("Nouveau stock", p.stock); if(q!==null){ p.stock = parseInt(q); setData(STORAGE.pieces, pieces); renderMaintenance(); } } };
-    window.resetGamme = (type) => { const machine = prompt("Nom machine :"); if(machine && MACHINES_LIST.includes(machine)){ const key=type==='op'?STORAGE.gammesOp:STORAGE.gammesMaint; let g=getData(key); g[machine]=type==='op'?["Nettoyage général","Vérification visuelle","Test fonctionnement"]:["Inspection mécanique","Lubrification","Vérification électrique","Test final"]; setData(key,g); renderMaintenance(); } };
-    window.resetStock = () => { if(confirm("Remettre stock par défaut ?")){ setData(STORAGE.pieces,[{ id:1, nom:"Courroie trapézoïdale", ref:"CT-100", stock:12, seuil:5, fournisseurPref:"Catana" }]); renderMaintenance(); } };
-    window.openPieceModal = () => { showModal("Ajouter pièce", `<label>Nom:</label><input id="pieceNom"><label>Référence:</label><input id="pieceRef"><label>Stock:</label><input id="pieceStock" type="number"><label>Seuil:</label><input id="pieceSeuil" type="number"><label>Fournisseur:</label><input id="pieceFourn">`, () => { let pieces = getData(STORAGE.pieces); let newId = pieces.length?Math.max(...pieces.map(p=>p.id))+1:1; pieces.push({ id:newId, nom:document.getElementById("pieceNom").value, ref:document.getElementById("pieceRef").value, stock:parseInt(document.getElementById("pieceStock").value)||0, seuil:parseInt(document.getElementById("pieceSeuil").value)||0, fournisseurPref:document.getElementById("pieceFourn").value }); setData(STORAGE.pieces, pieces); renderMaintenance(); }); };
-    window.editPiece = (id) => { let pieces = getData(STORAGE.pieces); let p = pieces.find(p=>p.id===id); if(p) showModal("Modifier pièce", `<label>Nom:</label><input id="pieceNom" value="${p.nom}"><label>Référence:</label><input id="pieceRef" value="${p.ref}"><label>Stock:</label><input id="pieceStock" type="number" value="${p.stock}"><label>Seuil:</label><input id="pieceSeuil" type="number" value="${p.seuil}"><label>Fournisseur:</label><input id="pieceFourn" value="${p.fournisseurPref}">`, () => { p.nom = document.getElementById("pieceNom").value; p.ref = document.getElementById("pieceRef").value; p.stock = parseInt(document.getElementById("pieceStock").value); p.seuil = parseInt(document.getElementById("pieceSeuil").value); p.fournisseurPref = document.getElementById("pieceFourn").value; setData(STORAGE.pieces, pieces); renderMaintenance(); }); };
-    window.deletePiece = (id) => { if(confirm("Supprimer cette pièce ?")){ let list = getData(STORAGE.pieces).filter(p=>p.id!==id); setData(STORAGE.pieces, list); renderMaintenance(); } };
-    window.openFournisseurModal = () => { showModal("Ajouter fournisseur", `<label>Nom:</label><input id="fournNom"><label>Contact:</label><input id="fournContact"><label>Tél:</label><input id="fournTel"><label>Email:</label><input id="fournEmail">`, () => { let fours = getData(STORAGE.fournisseurs); let newId = fours.length?Math.max(...fours.map(f=>f.id))+1:1; fours.push({ id:newId, nom:document.getElementById("fournNom").value, contact:document.getElementById("fournContact").value, tel:document.getElementById("fournTel").value, email:document.getElementById("fournEmail").value }); setData(STORAGE.fournisseurs, fours); renderMaintenance(); }); };
-    window.editFournisseur = (id) => { let fours = getData(STORAGE.fournisseurs); let f = fours.find(f=>f.id===id); if(f) showModal("Modifier fournisseur", `<label>Nom:</label><input id="fournNom" value="${f.nom}"><label>Contact:</label><input id="fournContact" value="${f.contact||''}"><label>Tél:</label><input id="fournTel" value="${f.tel||''}"><label>Email:</label><input id="fournEmail" value="${f.email||''}">`, () => { f.nom = document.getElementById("fournNom").value; f.contact = document.getElementById("fournContact").value; f.tel = document.getElementById("fournTel").value; f.email = document.getElementById("fournEmail").value; setData(STORAGE.fournisseurs, fours); renderMaintenance(); }); };
-    window.deleteFournisseur = (id) => { if(confirm("Supprimer ce fournisseur ?")){ let list = getData(STORAGE.fournisseurs).filter(f=>f.id!==id); setData(STORAGE.fournisseurs, list); renderMaintenance(); } };
-    window.supprimerConsommable = (id) => { if (confirm("Supprimer ce suivi consommable ?")) { supprimerConsommable(id); if (currentMaintTab === 'consommables') renderConsommables(); } };
-    
+    window.ajusterStock = async (id) => { let p = pieces.find(p=>p.id===id); if(p){ let q = prompt("Nouveau stock", p.stock); if(q!==null){ const newPieces = pieces.map(pp => pp.id === id ? { ...pp, stock: parseInt(q) } : pp); await sauvegarderCollection("pieces", newPieces); } } };
+    window.resetGamme = async (type) => { const machine = prompt("Nom machine :"); if(machine && MACHINES_LIST.includes(machine)){ const key = type==='op' ? 'gammesOp' : 'gammesMaint'; let g = type==='op' ? gammesOp : gammesMaint; const newGammes = { ...g, [machine]: type==='op' ? ["Nettoyage général","Vérification visuelle","Test fonctionnement"] : ["Inspection mécanique","Lubrification","Vérification électrique","Test final"] }; await sauvegarderCollection(key, newGammes); } };
+    window.resetStock = async () => { if(confirm("Remettre stock par défaut ?")){ await sauvegarderCollection("pieces", [{ id:1, nom:"Courroie trapézoïdale", ref:"CT-100", stock:12, seuil:5, fournisseurPref:"Catana" }]); } };
+    window.openPieceModal = () => { showModal("Ajouter pièce", `<label>Nom:</label><input id="pieceNom"><label>Référence:</label><input id="pieceRef"><label>Stock:</label><input id="pieceStock" type="number"><label>Seuil:</label><input id="pieceSeuil" type="number"><label>Fournisseur:</label><input id="pieceFourn">`, async () => { let newId = pieces.length ? Math.max(...pieces.map(p=>p.id)) + 1 : 1; const newPiece = { id:newId, nom:document.getElementById("pieceNom").value, ref:document.getElementById("pieceRef").value, stock:parseInt(document.getElementById("pieceStock").value)||0, seuil:parseInt(document.getElementById("pieceSeuil").value)||0, fournisseurPref:document.getElementById("pieceFourn").value }; await sauvegarderCollection("pieces", [...pieces, newPiece]); }); };
+    window.editPiece = (id) => { let p = pieces.find(p=>p.id===id); if(p) showModal("Modifier pièce", `<label>Nom:</label><input id="pieceNom" value="${p.nom}"><label>Référence:</label><input id="pieceRef" value="${p.ref}"><label>Stock:</label><input id="pieceStock" type="number" value="${p.stock}"><label>Seuil:</label><input id="pieceSeuil" type="number" value="${p.seuil}"><label>Fournisseur:</label><input id="pieceFourn" value="${p.fournisseurPref}">`, async () => { const newPieces = pieces.map(pp => pp.id === id ? { ...pp, nom:document.getElementById("pieceNom").value, ref:document.getElementById("pieceRef").value, stock:parseInt(document.getElementById("pieceStock").value), seuil:parseInt(document.getElementById("pieceSeuil").value), fournisseurPref:document.getElementById("pieceFourn").value } : pp); await sauvegarderCollection("pieces", newPieces); }); };
+    window.deletePiece = async (id) => { if(confirm("Supprimer cette pièce ?")){ await sauvegarderCollection("pieces", pieces.filter(p=>p.id!==id)); } };
+    window.openFournisseurModal = () => { showModal("Ajouter fournisseur", `<label>Nom:</label><input id="fournNom"><label>Contact:</label><input id="fournContact"><label>Tél:</label><input id="fournTel"><label>Email:</label><input id="fournEmail">`, async () => { let newId = fournisseurs.length ? Math.max(...fournisseurs.map(f=>f.id)) + 1 : 1; const newFour = { id:newId, nom:document.getElementById("fournNom").value, contact:document.getElementById("fournContact").value, tel:document.getElementById("fournTel").value, email:document.getElementById("fournEmail").value }; await sauvegarderCollection("fournisseurs", [...fournisseurs, newFour]); }); };
+    window.editFournisseur = (id) => { let f = fournisseurs.find(f=>f.id===id); if(f) showModal("Modifier fournisseur", `<label>Nom:</label><input id="fournNom" value="${f.nom}"><label>Contact:</label><input id="fournContact" value="${f.contact||''}"><label>Tél:</label><input id="fournTel" value="${f.tel||''}"><label>Email:</label><input id="fournEmail" value="${f.email||''}">`, async () => { const newFours = fournisseurs.map(ff => ff.id === id ? { ...ff, nom:document.getElementById("fournNom").value, contact:document.getElementById("fournContact").value, tel:document.getElementById("fournTel").value, email:document.getElementById("fournEmail").value } : ff); await sauvegarderCollection("fournisseurs", newFours); }); };
+    window.deleteFournisseur = async (id) => { if(confirm("Supprimer ce fournisseur ?")){ await sauvegarderCollection("fournisseurs", fournisseurs.filter(f=>f.id!==id)); } };
+    window.supprimerConsommable = async (id) => { if (confirm("Supprimer ce suivi consommable ?")) { await supprimerConsommable(id); } };
+
     function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
-    
-    // Lancement
-    renderMaintenance();
+
+    // Initialisation et écouteurs en temps réel
+    async function init() {
+        await initDefaultData();
+        ecouterCollection("equipements", (data) => { equipements = data; if (currentMaintTab === 'equipements') renderEquipements(); if (currentMaintTab === 'dashboard') renderDashboardMaintenance(); });
+        ecouterCollection("pieces", (data) => { pieces = data; if (currentMaintTab === 'stock') document.getElementById("maintTabContent").innerHTML = stockFull(); });
+        ecouterCollection("fournisseurs", (data) => { fournisseurs = data; if (currentMaintTab === 'achats') document.getElementById("maintTabContent").innerHTML = achatsFull(); });
+        ecouterCollection("pannes", (data) => { pannes = data; if (currentMaintTab === 'dashboard') renderDashboardMaintenance(); });
+        ecouterCollection("preventifs", (data) => { preventifs = data; });
+        ecouterCollection("gammesOp", (data) => { gammesOp = data; if (currentMaintTab === 'gammes') document.getElementById("maintTabContent").innerHTML = gammesFull(); });
+        ecouterCollection("gammesMaint", (data) => { gammesMaint = data; if (currentMaintTab === 'gammes') document.getElementById("maintTabContent").innerHTML = gammesFull(); });
+        ecouterCollection("signaux", (data) => { signaux = data; });
+        ecouterCollection("lastOpReport", (data) => { lastOpReport = data; });
+        ecouterCollection("interventionsPerso", (data) => { interventionsPerso = data; refreshMaintenanceViews(); });
+        ecouterCollection("excludedInterventions", (data) => { excludedInterventions = data; refreshMaintenanceViews(); });
+        ecouterCollection("interventionDetails", (data) => { interventionDetails = data; });
+        ecouterCollection("consommables", (data) => { consommables = data; if (currentMaintTab === 'consommables') renderConsommables(); if (currentMaintTab === 'dashboard') renderDashboardMaintenance(); });
+        ecouterCollection("historiquePannes", (data) => { historiquePannes = data; if (currentMaintTab === 'historique') { const container = document.getElementById("maintTabContent"); if(container) renderHistoriquePannes(container); } });
+        renderMaintenance();
+    }
+    init();
     document.getElementById("modalSaveInterventionBtn")?.addEventListener("click", saveCurrentInterventionDetails);
 </script>
 </body>
