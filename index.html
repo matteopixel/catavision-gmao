@@ -19,128 +19,607 @@
         .card { background: white; border-radius: 24px; box-shadow: 0 4px 14px rgba(0,0,0,0.03); margin-bottom: 28px; border: 1px solid #eef2f8; overflow-x: auto; }
         .card-header { padding: 18px 24px; border-bottom: 2px solid #e03a3e; font-weight: 700; font-size: 1.2rem; background: #fefaf9; }
         .card-body { padding: 22px 24px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #e9edf2; vertical-align: top; }
+        th { background: #f8fafc; font-weight: 600; }
         button { background: #e03a3e; color: white; border: none; padding: 8px 16px; border-radius: 40px; cursor: pointer; font-weight: 500; transition: 0.2s; margin: 3px; font-size: 0.8rem; }
-        button:hover { background: #b02a2e; }
+        button:hover { background: #b02a2e; transform: translateY(-1px); }
+        .btn-secondary { background: #2c5a6e; }
+        .btn-sm { padding: 5px 12px; font-size: 0.7rem; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600; }
+        .badge-red { background: #e03a3e; color: white; }
+        .badge-green { background: #2c7a4d; color: white; }
+        .badge-warning { background: #f4b942; color: #2d2b1f; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; border-left: 5px solid #e03a3e; padding: 18px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
         .stat-card .number { font-size: 2rem; font-weight: 800; color: #1f3a4b; }
-        .empty-state { color: #6c86a3; padding: 2rem; text-align: center; font-style: italic; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; border-radius: 32px; width: 90%; max-width: 500px; padding: 28px; box-shadow: 0 20px 35px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; border-bottom: 2px solid #e03a3e; padding-bottom: 12px; margin-bottom: 20px; }
+        .close-modal { background: none; font-size: 28px; cursor: pointer; color: #888; line-height: 1; border: none; }
+        input, select, textarea { width: 100%; padding: 10px 14px; margin: 8px 0 18px; border: 1px solid #cfdfe8; border-radius: 24px; font-family: inherit; }
+        label { font-weight: 600; margin-top: 8px; display: block; }
+        .alerte-rouge { animation: pulse 1s infinite; background-color: #e03a3e; color: white; padding: 14px; text-align: center; font-weight: bold; border-radius: 40px; margin-bottom: 20px; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
         .footer { background: #0b1a2c; color: #aac7dc; text-align: center; padding: 18px; font-size: 0.75rem; }
+        .reset-btn { background: #475569; margin: 0 6px 8px 0; }
+        .machine-gamme { background: #f9fafb; margin: 12px 0; padding: 12px 16px; border-radius: 24px; border-left: 4px solid #e03a3e; }
+        .step-container { background: #fef5f0; border-radius: 28px; padding: 18px; margin-top: 18px; }
+        .qcm-options { display: flex; gap: 24px; margin: 12px 0; }
+        .gantt-wrapper { overflow-x: auto; margin-top: 1rem; }
+        .gantt-table { border-collapse: collapse; white-space: nowrap; font-size: 11px; min-width: 100%; }
+        .gantt-table th, .gantt-table td { border: 0.5px solid #d4dee8; text-align: center; vertical-align: middle; padding: 6px 4px; }
+        .machine-col { position: sticky; left: 0; background: #f8fafd; font-weight: 700; color: #0f3b4f; z-index: 10; text-align: left; padding: 0 12px; min-width: 100px; }
+        .month-header { background: #2F4F7F; color: white; font-weight: 600; font-size: 12px; padding: 8px 4px; }
+        .day-num { font-weight: 600; background: #eef3fc; font-size: 10px; width: 24px; }
+        .cell { width: 24px; height: 24px; cursor: pointer; }
+        .wk { background: #d9d9d9; }
+        .hol { background: #ffb3b3; }
+        .sch { background: #4472c4; }
+        .maint { background: #ff6b35; }
+        .check { background: #9b59b6; }
+        .margin { background: #90ee90; }
+        .unavail { background: #ff0000; }
+        .wd { background: #ffffff; }
+        .lbl { font-size: 11px; font-weight: 800; color: white; display: inline-block; }
+        .legend { display: flex; flex-wrap: wrap; gap: 16px; background: white; padding: 12px 20px; border-radius: 28px; margin-top: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .leg-item { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; }
+        .leg-sq { width: 18px; height: 18px; border-radius: 4px; border: 0.5px solid #bdc4d0; }
+        .intervention-card { background: white; border-radius: 20px; padding: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border-left: 6px solid #ff6b35; transition: 0.2s; cursor: pointer; }
+        .intervention-card h4 { font-size: 1rem; margin-bottom: 0.5rem; color: #1f4e6e; }
+        .intervention-card .date { font-size: 0.75rem; color: #f39c12; font-weight: 600; }
+        .empty-state { color: #6c86a3; padding: 2rem; text-align: center; font-style: italic; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; margin-bottom: 16px; }
+        .gamme-preview { background: #f4f7fb; padding: 12px; border-radius: 20px; font-size: 0.85rem; margin-top: 8px; }
+        .historique-grid { display: flex; flex-direction: column; gap: 20px; }
+        .panne-card { background: #fff; border-radius: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 16px; border-left: 6px solid #e03a3e; transition: 0.2s; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+        .panne-image { width: 100px; height: 100px; object-fit: cover; border-radius: 16px; background: #f0f2f5; border: 1px solid #e2e8f0; }
+        .panne-infos { flex: 1; min-width: 180px; }
+        .panne-infos strong { color: #1f3a4b; }
+        .search-bar { margin-bottom: 20px; }
+        .photo-preview { margin-top: 10px; max-width: 120px; border-radius: 16px; }
+        .calendrier-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 20px; margin-top: 20px; }
+        .consom-card { background: #fef9f2; border-radius: 20px; padding: 16px; border-left: 6px solid #e03a3e; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .consom-card .date-alerte { font-size: 0.8rem; font-weight: bold; margin: 8px 0; }
+        .alert-commande { background: #ffebee; color: #b71c1c; }
+        .alert-install { background: #fff8e1; color: #f57f17; }
+        .install-banner { background: #2c5a6e; color: white; text-align: center; padding: 12px; border-radius: 40px; margin-bottom: 20px; cursor: pointer; }
+        @media (max-width: 780px) { .header { flex-direction: column; text-align: center; } .stats-grid { grid-template-columns: 1fr 1fr; } .panne-card { flex-direction: column; } .panne-image { width: 100%; height: auto; max-height: 180px; } }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="container" id="appContainer">
     <div class="header">
         <div class="logo-catana"><div class="catana-main">CATANA</div><div class="catana-sub">CATAMARANS</div></div>
         <div class="software-title"><div class="main">⚓ Catavision+ GMAO</div></div>
     </div>
-    <div class="tabs" id="tabsContainer"></div>
-    <div id="mainContent"></div>
-    <div class="footer">GMAO intégrale – Version simplifiée (sans Firebase)</div>
+    <div id="tabContents"></div>
+    <div class="footer">GMAO intégrale – Stockage local (localStorage)</div>
 </div>
 
+<!-- MODAL INTERVENTION -->
+<div id="interventionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>Détails de l'intervention</h3><button class="close-modal" onclick="closeInterventionModal()">&times;</button></div>
+        <div id="modalInterventionBody">
+            <label>Machine :</label><span id="modalMachine"></span>
+            <label>Date :</label><span id="modalDate"></span>
+            <label>Type :</label><span id="modalType"></span>
+            <label>Matériel nécessaire :</label><input type="text" id="modalMateriel" placeholder="ex: roulements, graisse">
+            <label>Temps d'intervention :</label><input type="text" id="modalTemps" placeholder="ex: 2h30">
+            <label>Gamme de maintenance :</label><div id="modalGamme" class="gamme-preview"></div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+            <button class="btn-secondary" onclick="closeInterventionModal()">Annuler</button>
+            <button id="modalSaveInterventionBtn">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE GLOBALE -->
+<div id="globalModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 id="modalTitle">Titre</h3><button class="close-modal" onclick="closeModal()">&times;</button></div>
+        <div id="modalBody"></div>
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+            <button class="btn-secondary" onclick="closeModal()">Annuler</button>
+            <button id="modalSaveBtn">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-    // Données simulées (stockage local)
-    let equipements = [
-        { id: 1, nom: "Biesse 1", ref: "B1", localisation: "Atelier", miseService: "2020-01-01", statut: "En fonctionnement" },
-        { id: 2, nom: "Biesse 2", ref: "B2", localisation: "Atelier", miseService: "2020-01-01", statut: "Maintenance" },
-        { id: 3, nom: "Jade 240", ref: "J240", localisation: "Usinage", miseService: "2021-06-01", statut: "En fonctionnement" }
-    ];
-    let pannes = [
-        { id: 1, equipementId: 2, description: "Bruit anormal", dateDecla: new Date().toISOString(), statut: "Ouvert" }
-    ];
+    // ==================== STORAGE ====================
+    const STORAGE = { 
+        equipements: 'catavision_equipements', pieces: 'catavision_pieces', fournisseurs: 'catavision_fournisseurs', commandes: 'catavision_commandes', preventifs: 'catavision_preventifs', pannes: 'catavision_pannes', gammesOp: 'catavision_gammes_operateurs', gammesMaint: 'catavision_gammes_maintenance', signaux: 'catavision_signaux', lastOpReport: 'catavision_last_op_report', interventionsPerso: 'catavision_interventions_perso', excludedInterventions: 'catavision_excluded_interventions', interventionDetails: 'catavision_intervention_details', alertePanneIgnored: 'catavision_alerte_panne_ignoree',
+        consommables: 'catavision_consommables', historiquePannes: 'catavision_historique_pannes'
+    };
+    function getData(key) { return JSON.parse(localStorage.getItem(key)) || []; }
+    function setData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+    
+    // ==================== DONNÉES FIXES GANTT ====================
+    const MACHINES_LIST = ["Biesse 1","Biesse 2","Biesse 3","Biesse 4","Biesse 5","Biesse 6","Jade 240","Stream A","Eastman 1","Eastman 2"];
+    const GANTT_DATA = {
+        machines: MACHINES_LIST,
+        all_days: (() => { let dates = []; let start = new Date(2026, 3, 7); let end = new Date(2026, 6, 31); for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10)); return dates; })(),
+        school_days: ["2026-06-10","2026-06-08","2026-06-12","2026-06-15","2026-06-19","2026-06-09","2026-06-18","2026-06-17","2026-06-16","2026-06-11"],
+        holidays: ["2026-05-14","2026-04-30","2026-05-11","2026-05-01","2026-05-25","2026-05-08","2026-05-15"],
+        data: {
+            "Biesse 1": {"maint":["2026-04-07","2026-05-04","2026-06-01","2026-07-01"],"check":["2026-07-13","2026-04-20","2026-06-29","2026-05-18","2026-07-27"],"margin":["2026-04-09","2026-05-05","2026-05-06","2026-06-03","2026-04-28","2026-04-08","2026-06-02","2026-07-02","2026-05-29","2026-07-03","2026-04-29","2026-05-28","2026-06-30"]},
+            "Biesse 2": {"maint":["2026-05-06","2026-04-09","2026-07-03","2026-06-03"],"check":["2026-05-19","2026-07-28","2026-05-05","2026-04-21","2026-04-08","2026-06-02","2026-07-14","2026-06-30"],"margin":["2026-06-05","2026-05-07","2026-04-07","2026-04-10","2026-07-01","2026-06-01","2026-07-02","2026-05-12","2026-05-04","2026-07-06","2026-07-07","2026-06-04","2026-04-13"]},
+            "Biesse 3": {"maint":["2026-06-05","2026-05-12","2026-07-07","2026-04-13"],"check":["2026-04-09","2026-07-15","2026-04-22","2026-05-06","2026-06-03","2026-07-01","2026-07-29","2026-05-20"],"margin":["2026-05-07","2026-06-08","2026-04-10","2026-06-09","2026-05-13","2026-04-14","2026-05-18","2026-07-06","2026-07-03","2026-06-04","2026-07-09","2026-04-15","2026-07-08"]},
+            "Biesse 4": {"maint":["2026-07-09","2026-04-15","2026-05-18","2026-06-23"],"check":["2026-05-26","2026-04-27","2026-06-22","2026-07-20","2026-05-12","2026-07-06","2026-04-13"],"margin":["2026-06-24","2026-07-13","2026-05-19","2026-06-25","2026-07-10","2026-06-19","2026-05-13","2026-04-14","2026-04-16","2026-05-20","2026-07-07","2026-04-17","2026-07-08"]},
+            "Biesse 5": {"maint":["2026-05-20","2026-04-17","2026-07-13","2026-06-25"],"check":["2026-05-27","2026-05-13","2026-06-23","2026-04-28","2026-07-21","2026-04-14","2026-07-07"],"margin":["2026-06-24","2026-05-19","2026-06-26","2026-04-20","2026-07-10","2026-05-22","2026-07-15","2026-04-21","2026-04-16","2026-06-29","2026-05-18","2026-07-14","2026-05-21","2026-07-09","2026-04-15"]},
+            "Biesse 6": {"maint":["2026-05-22","2026-06-29","2026-04-21","2026-07-15"],"check":["2026-06-24","2026-07-22","2026-05-13","2026-04-29","2026-04-15","2026-05-28","2026-07-08"],"margin":["2026-07-13","2026-05-26","2026-06-26","2026-07-17","2026-04-20","2026-07-01","2026-04-23","2026-05-27","2026-04-22","2026-07-16","2026-05-20","2026-07-14","2026-05-21","2026-04-17","2026-06-30","2026-06-25"]},
+            "Jade 240": {"maint":["2026-06-24","2026-04-09","2026-07-15","2026-04-22","2026-05-06","2026-06-03","2026-07-01","2026-07-22","2026-05-13","2026-07-29","2026-05-20","2026-04-29","2026-04-15","2026-05-28","2026-07-08"],"check":["2026-07-13","2026-04-07","2026-05-26","2026-04-20","2026-04-27","2026-06-22","2026-06-01","2026-07-20","2026-06-29","2026-05-12","2026-05-04","2026-05-18","2026-07-06","2026-07-27","2026-04-13"],"margin":["2026-05-07","2026-05-19","2026-05-22","2026-04-21","2026-04-08","2026-04-28","2026-04-16","2026-07-31","2026-07-07","2026-06-04","2026-07-09","2026-06-05","2026-04-10","2026-07-10","2026-05-27","2026-07-24","2026-07-14","2026-07-03","2026-05-29","2026-07-30","2026-06-25","2026-06-26","2026-07-17","2026-07-16","2026-07-02","2026-07-21","2026-05-21","2026-07-23","2026-05-05","2026-04-23","2026-07-28","2026-06-23","2026-06-02","2026-04-14","2026-04-24","2026-04-17","2026-06-30"]},
+            "Stream A": {"maint":["2026-06-24","2026-04-09","2026-07-15","2026-04-22","2026-05-06","2026-06-03","2026-07-01","2026-07-22","2026-05-13","2026-07-29","2026-05-20","2026-04-29","2026-04-15","2026-05-28","2026-07-08"],"check":["2026-07-13","2026-04-07","2026-05-26","2026-04-20","2026-04-27","2026-06-22","2026-06-01","2026-07-20","2026-06-29","2026-05-12","2026-05-04","2026-05-18","2026-07-06","2026-07-27","2026-04-13"],"margin":["2026-05-07","2026-05-19","2026-05-22","2026-04-21","2026-04-08","2026-04-28","2026-04-16","2026-07-31","2026-07-07","2026-06-04","2026-07-09","2026-06-05","2026-04-10","2026-07-10","2026-05-27","2026-07-24","2026-07-14","2026-07-03","2026-05-29","2026-07-30","2026-06-25","2026-06-26","2026-07-17","2026-07-16","2026-07-02","2026-07-21","2026-05-21","2026-07-23","2026-05-05","2026-04-23","2026-07-28","2026-06-23","2026-06-02","2026-04-14","2026-04-24","2026-04-17","2026-06-30"]},
+            "Eastman 1": {"maint":["2026-04-27","2026-05-29","2026-07-21"],"check":[],"margin":["2026-07-17","2026-04-23","2026-05-27","2026-07-22","2026-06-01","2026-04-28","2026-06-02","2026-07-20","2026-04-24","2026-04-29","2026-07-23","2026-05-28"]},
+            "Eastman 2": {"maint":["2026-04-29","2026-05-28","2026-07-24"],"check":[],"margin":["2026-05-26","2026-05-05","2026-07-28","2026-05-27","2026-07-22","2026-04-27","2026-06-01","2026-04-28","2026-05-04","2026-05-29","2026-07-23","2026-07-27"]}
+        }
+    };
 
-    function getEquipementName(id) {
-        const eq = equipements.find(e => e.id === id);
-        return eq ? eq.nom : "?";
+    // Initialisation des données par défaut
+    function initEquipements() { if (getData(STORAGE.equipements).length === 0) { const equipments = MACHINES_LIST.map((nom, idx) => ({ id: idx+1, nom, ref: nom.replace(/\s/g,'').toUpperCase(), localisation: "Atelier Principal", miseService: "2020-01-01", statut: "En fonctionnement" })); setData(STORAGE.equipements, equipments); } }
+    function initOtherData() {
+        if (!localStorage.getItem(STORAGE.pieces)) setData(STORAGE.pieces, [{ id:1, nom:"Courroie trapézoïdale", ref:"CT-100", stock:12, seuil:5, fournisseurPref:"Catana" }]);
+        if (!localStorage.getItem(STORAGE.fournisseurs)) setData(STORAGE.fournisseurs, [{ id:1, nom:"Catana Fournitures", contact:"Jean", tel:"0123456789", email:"contact@catana.com" }]);
+        if (!localStorage.getItem(STORAGE.commandes)) setData(STORAGE.commandes, []);
+        if (!localStorage.getItem(STORAGE.pannes)) setData(STORAGE.pannes, []);
+        if (!localStorage.getItem(STORAGE.preventifs)) setData(STORAGE.preventifs, []);
+        if (!localStorage.getItem(STORAGE.gammesOp)) { let def={}; MACHINES_LIST.forEach(m=>{ def[m]=["Nettoyage général","Vérification visuelle","Test fonctionnement"]; }); setData(STORAGE.gammesOp, def); }
+        if (!localStorage.getItem(STORAGE.gammesMaint)) { let def={}; MACHINES_LIST.forEach(m=>{ def[m]=["Inspection mécanique","Lubrification","Vérification électrique","Test final"]; }); setData(STORAGE.gammesMaint, def); }
+        if (!localStorage.getItem(STORAGE.signaux)) setData(STORAGE.signaux, []);
+        if (!localStorage.getItem(STORAGE.lastOpReport)) setData(STORAGE.lastOpReport, {});
+        if (!localStorage.getItem(STORAGE.alertePanneIgnored)) setData(STORAGE.alertePanneIgnored, false);
+        if (!localStorage.getItem(STORAGE.interventionsPerso)) setData(STORAGE.interventionsPerso, []);
+        if (!localStorage.getItem(STORAGE.excludedInterventions)) setData(STORAGE.excludedInterventions, []);
+        if (!localStorage.getItem(STORAGE.interventionDetails)) setData(STORAGE.interventionDetails, {});
+        if (!localStorage.getItem(STORAGE.consommables)) setData(STORAGE.consommables, []);
+        if (!localStorage.getItem(STORAGE.historiquePannes)) setData(STORAGE.historiquePannes, []);
     }
-
-    function renderDashboard() {
-        const fonctionnel = equipements.filter(e => e.statut === "En fonctionnement").length;
-        const maint = equipements.filter(e => e.statut === "Maintenance").length;
-        const panne = equipements.filter(e => e.statut === "Panne").length;
-        const pannesActives = pannes.filter(p => p.statut !== "Résolu");
-        let pannesHtml = pannesActives.length === 0 ? "<p>Aucune panne en cours.</p>" : 
-            `<table style="width:100%"><thead><th>Machine</th><th>Description</th><th>Date</th><th>Action</th></thead><tbody>
-                ${pannesActives.map(pan => `
-                    <tr><td>${getEquipementName(pan.equipementId)}</td><td>${pan.description}</td><td>${new Date(pan.dateDecla).toLocaleString()}</td>
-                    <td><button class="btn-sm" onclick="resoudrePanne(${pan.id})">Résoudre</button></td></tr>
-                `).join('')}
-            </tbody></table>`;
-        document.getElementById("mainContent").innerHTML = `
-            <div class="stats-grid">
-                <div class="stat-card"><h3>🟢 Fonctionnelles</h3><div class="number">${fonctionnel}</div></div>
-                <div class="stat-card"><h3>🔧 Maintenance</h3><div class="number">${maint}</div></div>
-                <div class="stat-card"><h3>🔴 Pannes</h3><div class="number">${panne}</div></div>
-            </div>
-            <div class="card"><div class="card-header">🔧 Pannes actives</div><div class="card-body">${pannesHtml}</div></div>
-        `;
+    initEquipements(); initOtherData();
+    
+    function getEquipementName(id) { const eq = getData(STORAGE.equipements).find(e=>e.id===id); return eq?eq.nom:"?"; }
+    function getEquipementIdByName(nom) { const eq = getData(STORAGE.equipements).find(e=>e.nom===nom); return eq?eq.id:null; }
+    function getRealisePercent() { 
+        const preventifs = getData(STORAGE.preventifs); const pannes = getData(STORAGE.pannes); 
+        const total = preventifs.length + pannes.length; const realisees = preventifs.filter(p=>p.statut==="Réalisé").length + pannes.filter(p=>p.statut==="Résolu").length; 
+        return { realisees, total, percent: total === 0 ? 100 : Math.round((realisees / total) * 100) }; 
     }
-
-    function renderEquipements() {
-        document.getElementById("mainContent").innerHTML = `
-            <div class="card"><div class="card-header">🖥️ Liste des équipements</div><div class="card-body">
-                <table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Localisation</th><th>Statut</th><th>Actions</th></thead>
-                <tbody>${equipements.map(e => `
-                    <tr><td>${e.nom}</td><td>${e.ref}</td><td>${e.localisation}</td>
-                    <td><span style="background:${e.statut === 'En fonctionnement' ? '#2c7a4d' : (e.statut === 'Maintenance' ? '#f4b942' : '#e03a3e')}; color:white; padding:4px 8px; border-radius:20px;">${e.statut}</span></td>
-                    <td><button class="btn-sm" onclick="changerStatut(${e.id}, 'En fonctionnement')">✅ Fonctionnelle</button>
-                    <button class="btn-sm" onclick="changerStatut(${e.id}, 'Maintenance')">🔧 Maintenance</button>
-                    <button class="btn-sm" onclick="changerStatut(${e.id}, 'Panne')">❌ Panne</button></td></tr>
-                `).join('')}</tbody>
-                </table>
-                <button id="ajouterEquipement" style="margin-top:16px;">+ Ajouter un équipement</button>
-            </div></div>
+    
+    // ==================== GESTION CONSOMMABLES ====================
+    function getConsommables() { return getData(STORAGE.consommables); }
+    function saveConsommables(data) { setData(STORAGE.consommables, data); }
+    function ajouterConsommable(machine, nomPiece, reference, dureeJours) {
+        const debut = new Date();
+        const dateAlerteCommande = new Date(debut);
+        dateAlerteCommande.setDate(debut.getDate() + dureeJours);
+        const dateAlerteInstall = new Date(dateAlerteCommande);
+        dateAlerteInstall.setDate(dateAlerteCommande.getDate() + 14);
+        const consommable = {
+            id: Date.now(),
+            machine,
+            nomPiece,
+            reference,
+            dureeJours,
+            dateDebut: debut.toISOString(),
+            dateAlerteCommande: dateAlerteCommande.toISOString(),
+            dateAlerteInstall: dateAlerteInstall.toISOString(),
+            alerteCommandeEnvoyee: false,
+            alerteInstallEnvoyee: false
+        };
+        const list = getConsommables();
+        list.push(consommable);
+        saveConsommables(list);
+    }
+    function supprimerConsommable(id) {
+        let list = getConsommables();
+        list = list.filter(c => c.id !== id);
+        saveConsommables(list);
+    }
+    function getAlertesActives() {
+        const now = new Date();
+        const consos = getConsommables();
+        const alertesCommande = [];
+        const alertesInstall = [];
+        consos.forEach(c => {
+            const dateCmd = new Date(c.dateAlerteCommande);
+            const dateInst = new Date(c.dateAlerteInstall);
+            if (dateCmd <= now && !c.alerteCommandeEnvoyee) alertesCommande.push(c);
+            if (dateInst <= now && !c.alerteInstallEnvoyee) alertesInstall.push(c);
+        });
+        return { alertesCommande, alertesInstall };
+    }
+    function marquerAlerteEnvoyee(id, type) {
+        let list = getConsommables();
+        const idx = list.findIndex(c => c.id === id);
+        if (idx !== -1) {
+            if (type === 'commande') list[idx].alerteCommandeEnvoyee = true;
+            else if (type === 'install') list[idx].alerteInstallEnvoyee = true;
+            saveConsommables(list);
+        }
+    }
+    
+    // ==================== HISTORIQUE PANNES AVEC PHOTOS ====================
+    function getHistorique() { return getData(STORAGE.historiquePannes); }
+    function saveHistorique(hist) { setData(STORAGE.historiquePannes, hist); }
+    function addHistorique(machine, piece, description, imageBase64) {
+        let hist = getHistorique();
+        hist.unshift({ id: Date.now(), date: new Date().toISOString(), machine, piece, description, imageBase64: imageBase64 || null });
+        saveHistorique(hist);
+    }
+    function deleteHistorique(id) {
+        let hist = getHistorique().filter(h => h.id !== id);
+        saveHistorique(hist);
+    }
+    
+    // ==================== INTERVENTIONS ====================
+    function getExcludedIds() { return getData(STORAGE.excludedInterventions); }
+    function addExcludedId(id) { let list = getExcludedIds(); if (!list.includes(id)) { list.push(id); setData(STORAGE.excludedInterventions, list); } }
+    function getFixedInterventionId(machine, date, type) { return `fixed_${machine}_${date}_${type}`; }
+    function getAllActiveInterventions() {
+        const excluded = getExcludedIds(); const active = [];
+        for (let machine of GANTT_DATA.machines) {
+            const mData = GANTT_DATA.data[machine];
+            (mData.maint || []).forEach(date => { const id = getFixedInterventionId(machine, date, 'M'); if (!excluded.includes(id)) active.push({ id, machine, date, type: 'M', source: 'fixe' }); });
+            (mData.check || []).forEach(date => { const id = getFixedInterventionId(machine, date, 'V'); if (!excluded.includes(id)) active.push({ id, machine, date, type: 'V', source: 'fixe' }); });
+        }
+        const perso = getData(STORAGE.interventionsPerso);
+        perso.forEach(inter => { const id = `perso_${inter.id}`; if (!excluded.includes(id)) active.push({ id, machine: inter.machine, date: inter.date, type: inter.type, source: 'perso', originalId: inter.id }); });
+        return active;
+    }
+    function addIntervention(machine, date, type) { const perso = getData(STORAGE.interventionsPerso); perso.push({ id: Date.now(), machine, date, type, realized: false }); setData(STORAGE.interventionsPerso, perso); refreshMaintenanceViews(); }
+    function deleteIntervention(interventionId, source, originalId) { if (source === 'fixe') addExcludedId(interventionId); else if (source === 'perso') { let perso = getData(STORAGE.interventionsPerso); perso = perso.filter(p => p.id !== originalId); setData(STORAGE.interventionsPerso, perso); } refreshMaintenanceViews(); const container = document.getElementById("allInterventionsContainer"); if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container); }
+    function getInterventionDetails(id) { return getData(STORAGE.interventionDetails)[id] || { materiel: "", temps: "" }; }
+    function saveInterventionDetails(id, materiel, temps) { let d = getData(STORAGE.interventionDetails); d[id] = { materiel, temps }; setData(STORAGE.interventionDetails, d); }
+    let currentInterventionId = null;
+    function openInterventionDetails(intervention) { currentInterventionId = intervention.id; document.getElementById("modalMachine").innerText = intervention.machine; document.getElementById("modalDate").innerText = new Date(intervention.date).toLocaleDateString('fr-FR'); document.getElementById("modalType").innerText = intervention.type === 'M' ? 'Maintenance (M)' : 'Vérification visuelle (V)'; const saved = getInterventionDetails(intervention.id); document.getElementById("modalMateriel").value = saved.materiel; document.getElementById("modalTemps").value = saved.temps; const gammesMaint = getData(STORAGE.gammesMaint); const gamme = gammesMaint[intervention.machine] || []; let gammeHtml = ""; if (gamme.length > 0) gammeHtml = gamme.map(step => `• ${step}`).join('<br>'); document.getElementById("modalGamme").innerHTML = gammeHtml; document.getElementById("interventionModal").style.display = "flex"; }
+    function saveCurrentInterventionDetails() { if (currentInterventionId) { saveInterventionDetails(currentInterventionId, document.getElementById("modalMateriel").value, document.getElementById("modalTemps").value); alert("Informations enregistrées."); closeInterventionModal(); refreshMaintenanceViews(); const container = document.getElementById("allInterventionsContainer"); if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container); } }
+    function closeInterventionModal() { document.getElementById("interventionModal").style.display = "none"; }
+    function closeModal() { document.getElementById("globalModal").style.display = "none"; }
+    function showModal(title, bodyHtml, onSave) { 
+        document.getElementById("modalTitle").innerText = title; 
+        document.getElementById("modalBody").innerHTML = bodyHtml; 
+        const saveBtn = document.getElementById("modalSaveBtn"); 
+        const newSaveBtn = saveBtn.cloneNode(true);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+        newSaveBtn.onclick = () => { onSave(); closeModal(); }; 
+        document.getElementById("globalModal").style.display = "flex"; 
+    }
+    
+    // ==================== VUES MAINTENANCE (TOUS LES ONGLETS) ====================
+    let currentGammeType = "op";
+    let currentMaintTab = "dashboard";
+    
+    function renderDashboardMaintenance() {
+        const eq = getData(STORAGE.equipements);
+        const tot = eq.length, panne = eq.filter(e=>e.statut==="Panne").length, maint = eq.filter(e=>e.statut==="Maintenance").length, fonctionnel = tot-panne-maint;
+        const pannesActives = getData(STORAGE.pannes).filter(p => p.statut !== "Résolu");
+        let alerteIgnored = getData(STORAGE.alertePanneIgnored) || false;
+        let showAlerte = (pannesActives.length > 0 && !alerteIgnored);
+        let alerteHtml = showAlerte ? `<div class="alerte-rouge">🚨 ALERTE MAINTENANCE : ${pannesActives.length} panne(s) active(s) ! <button id="stopPanneAlerteBtn" style="background:white;color:black;margin-left:15px;">Arrêter l'alerte</button></div>` : "";
+        const { alertesCommande, alertesInstall } = getAlertesActives();
+        let consommablesHtml = "";
+        if (alertesCommande.length > 0) consommablesHtml += `<div class="alerte-rouge" style="background:#e67e22;">⚠️ ALERTE COMMANDE : ${alertesCommande.length} consommable(s) à commander !<br>${alertesCommande.map(c => `${c.machine} - ${c.nomPiece} (${c.reference})`).join(', ')}<button id="ackCommandeBtn" style="background:white;color:black;margin-left:15px;">Accusé réception</button></div>`;
+        if (alertesInstall.length > 0) consommablesHtml += `<div class="alerte-rouge" style="background:#d35400;">🔧 ALERTE INSTALLATION : ${alertesInstall.length} consommable(s) à installer !<br>${alertesInstall.map(c => `${c.machine} - ${c.nomPiece} (${c.reference})`).join(', ')}<button id="ackInstallBtn" style="background:white;color:black;margin-left:15px;">Accusé réception</button></div>`;
+        const activeInterventions = getAllActiveInterventions();
+        const today = new Date().toISOString().slice(0,10);
+        const interventionsToday = activeInterventions.filter(i => i.date === today);
+        const future = activeInterventions.filter(i => i.date > today).sort((a,b)=>a.date.localeCompare(b.date));
+        const coming = future.slice(0,7);
+        let todayHtml = interventionsToday.length === 0 ? '<div class="empty-state">Aucune intervention prévue aujourd’hui.</div>' : '';
+        interventionsToday.forEach(inter => { todayHtml += `<div class="intervention-card" style="border-left-color:${inter.type==='M'?'#ff6b35':'#9b59b6'};margin-bottom:10px;" onclick='openInterventionDetails(${JSON.stringify(inter).replace(/'/g, "&#39;")})'><h4>🔧 ${inter.machine}</h4><div class="type">${inter.type==='M'?'Maintenance':'Vérification visuelle'} ${inter.source==='perso'?' (ajoutée)':''}</div></div>`; });
+        let comingHtml = coming.length === 0 ? '<div class="empty-state">Aucune intervention à venir.</div>' : '';
+        coming.forEach(inter => { comingHtml += `<div class="intervention-card" style="border-left-color:${inter.type==='M'?'#ff6b35':'#9b59b6'};margin-bottom:10px;" onclick='openInterventionDetails(${JSON.stringify(inter).replace(/'/g, "&#39;")})'><h4>🔧 ${inter.machine}</h4><div class="date">📅 ${new Date(inter.date).toLocaleDateString('fr-FR')}</div><div class="type">${inter.type==='M'?'Maintenance':'Vérification visuelle'} ${inter.source==='perso'?' (ajoutée)':''}</div></div>`; });
+        document.getElementById("maintTabContent").innerHTML = `
+            <div class="stats-grid"><div class="stat-card"><h3>🟢 Fonctionnelles</h3><div class="number">${fonctionnel}</div></div>
+            <div class="stat-card"><h3>🔧 Maintenance</h3><div class="number">${maint}</div></div>
+            <div class="stat-card"><h3>🔴 Pannes</h3><div class="number">${panne}</div></div></div>
+            ${alerteHtml}
+            ${consommablesHtml}
+            <div class="card"><div class="card-header">📅 Interventions du jour (${today}) - cliquables</div><div class="card-body">${todayHtml}</div></div>
+            <div class="card"><div class="card-header">⏳ Interventions à venir (7 prochaines dates)</div><div class="card-body">${comingHtml}</div></div>
+            <div class="card"><div class="card-header">🔧 Pannes actives</div><div class="card-body">${pannesActives.length===0?"<p>Aucune panne en cours.</p>":`<table style="width:100%"><thead><th>Machine</th><th>Description</th><th>Date</th><th>Action</th></thead><tbody>${pannesActives.map(pan=>`<tr><td>${getEquipementName(pan.equipementId)}</td><td>${pan.description}</td><td>${new Date(pan.dateDecla).toLocaleString()}</td><td><button class="btn-sm" onclick="resoudrePanneMaintenance(${pan.id})">🔧 Résoudre</button></td>`).join('')}</tbody></table>`}</div></div>
         `;
-        document.getElementById("ajouterEquipement")?.addEventListener("click", () => {
-            const nom = prompt("Nom de l'équipement :");
-            if (nom) {
-                const newId = Math.max(...equipements.map(e => e.id)) + 1;
-                equipements.push({ id: newId, nom, ref: nom.substring(0,3).toUpperCase(), localisation: "Atelier", miseService: new Date().toISOString().slice(0,10), statut: "En fonctionnement" });
-                renderEquipements();
+        setTimeout(() => {
+            const stopBtn = document.getElementById("stopPanneAlerteBtn");
+            if (stopBtn) stopBtn.addEventListener("click", () => { setData(STORAGE.alertePanneIgnored, true); renderDashboardMaintenance(); });
+            const ackCommande = document.getElementById("ackCommandeBtn");
+            if (ackCommande) ackCommande.addEventListener("click", () => { getAlertesActives().alertesCommande.forEach(c => marquerAlerteEnvoyee(c.id, 'commande')); renderDashboardMaintenance(); });
+            const ackInstall = document.getElementById("ackInstallBtn");
+            if (ackInstall) ackInstall.addEventListener("click", () => { getAlertesActives().alertesInstall.forEach(c => marquerAlerteEnvoyee(c.id, 'install')); renderDashboardMaintenance(); });
+        }, 50);
+    }
+    
+    function renderEquipements() { 
+        const equipements = getData(STORAGE.equipements);
+        const container = document.getElementById("maintTabContent");
+        let html = `<div class="card"><div class="card-header">🖥️ Liste des équipements</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Localisation</th><th>Mise en service</th><th>Statut</th><th>Actions</th></thead><tbody>${equipements.map(e => `<tr data-id="${e.id}"><td>${escapeHtml(e.nom)}</td><td>${escapeHtml(e.ref)}</td><td>${escapeHtml(e.localisation)}</td><td>${escapeHtml(e.miseService)}</td><td>${escapeHtml(e.statut)}</td><td><button class="btn-sm edit-equipement" data-id="${e.id}">✏️ Modifier</button><button class="btn-sm btn-secondary delete-equipement" data-id="${e.id}">🗑️ Supprimer</button></td>`).join('')}</tbody></table><button id="addEquipementBtn" style="margin-top:16px;">+ Ajouter un équipement</button></div></div>`;
+        container.innerHTML = html;
+        document.querySelectorAll('.edit-equipement').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.getAttribute('data-id')); const equip = equipements.find(e => e.id === id); if (equip) openEquipementModal(equip); }));
+        document.querySelectorAll('.delete-equipement').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.getAttribute('data-id')); if (confirm("Supprimer définitivement cet équipement ?")) { let list = getData(STORAGE.equipements).filter(e => e.id !== id); setData(STORAGE.equipements, list); renderEquipements(); } }));
+        document.getElementById('addEquipementBtn')?.addEventListener('click', () => openEquipementModal(null));
+    }
+    
+    function openEquipementModal(equipement = null) {
+        const isEdit = !!equipement;
+        const title = isEdit ? "✏️ Modifier l'équipement" : "➕ Ajouter un équipement";
+        const bodyHtml = `<label>Nom :</label><input id="eqNom" value="${escapeHtml(equipement?.nom||'')}"><label>Référence :</label><input id="eqRef" value="${escapeHtml(equipement?.ref||'')}"><label>Localisation :</label><input id="eqLocalisation" value="${escapeHtml(equipement?.localisation||'Atelier Principal')}"><label>Date de mise en service :</label><input id="eqMiseService" type="date" value="${equipement?.miseService||new Date().toISOString().slice(0,10)}"><label>Statut :</label><select id="eqStatut"><option value="En fonctionnement">En fonctionnement</option><option value="Maintenance">Maintenance</option><option value="Panne">Panne</option></select>`;
+        showModal(title, bodyHtml, () => {
+            const nom = document.getElementById("eqNom").value.trim();
+            const ref = document.getElementById("eqRef").value.trim();
+            const localisation = document.getElementById("eqLocalisation").value.trim();
+            const miseService = document.getElementById("eqMiseService").value;
+            const statut = document.getElementById("eqStatut").value;
+            if (!nom) return alert("Le nom est obligatoire.");
+            let equipements = getData(STORAGE.equipements);
+            if (isEdit) {
+                equipement.nom = nom; equipement.ref = ref; equipement.localisation = localisation; equipement.miseService = miseService; equipement.statut = statut;
+                setData(STORAGE.equipements, equipements);
+            } else {
+                if (equipements.some(e => e.nom === nom)) { alert("Un équipement avec ce nom existe déjà."); return; }
+                const newId = equipements.length ? Math.max(...equipements.map(e => e.id)) + 1 : 1;
+                equipements.push({ id: newId, nom, ref: ref || nom.replace(/\s/g, '').toUpperCase(), localisation: localisation || "Atelier Principal", miseService: miseService || new Date().toISOString().slice(0,10), statut });
+                setData(STORAGE.equipements, equipements);
             }
+            if (currentMaintTab === 'equipements') renderEquipements();
+            else refreshMaintenanceViews();
         });
     }
-
-    window.changerStatut = (id, statut) => {
-        const index = equipements.findIndex(e => e.id === id);
-        if (index !== -1) {
-            equipements[index].statut = statut;
-            renderEquipements();
-            renderDashboard(); // Met à jour le dashboard si actif
-        }
-    };
-
-    window.resoudrePanne = (id) => {
-        const index = pannes.findIndex(p => p.id === id);
-        if (index !== -1) {
-            pannes[index].statut = "Résolu";
-            renderDashboard();
-        }
-    };
-
-    function initTabs() {
-        const tabs = ["dashboard", "equipements"];
-        const titles = { dashboard: "📊 Dashboard", equipements: "🖥️ Équipements" };
-        const container = document.getElementById("tabsContainer");
-        container.innerHTML = "";
-        let activeTab = "dashboard";
-        tabs.forEach(tab => {
-            const btn = document.createElement("button");
-            btn.className = "tab-btn" + (tab === activeTab ? " active" : "");
-            btn.textContent = titles[tab];
-            btn.onclick = () => {
-                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
-                if (tab === "dashboard") renderDashboard();
-                else if (tab === "equipements") renderEquipements();
-            };
-            container.appendChild(btn);
+    
+    function buildGanttTableWithCustom() {
+        const container = document.getElementById("ganttContainer"); if(!container) return;
+        container.innerHTML = '';
+        const table = document.createElement('table'); table.className = 'gantt-table';
+        const rowMonth = table.insertRow();
+        const thFirst = document.createElement('th'); thFirst.className = 'machine-col month-header'; thFirst.textContent = 'Machine'; rowMonth.appendChild(thFirst);
+        let prevMonth = null, colSpan = 0, currentMonthTh = null;
+        GANTT_DATA.all_days.forEach((d, idx) => {
+            const m = parseInt(d.split('-')[1]);
+            if (m !== prevMonth) {
+                if (currentMonthTh) currentMonthTh.colSpan = colSpan;
+                currentMonthTh = document.createElement('th'); currentMonthTh.className = 'month-header';
+                const monthNames = {4:'Avril 2026',5:'Mai 2026',6:'Juin 2026',7:'Juillet 2026'};
+                currentMonthTh.textContent = monthNames[m];
+                rowMonth.appendChild(currentMonthTh);
+                colSpan = 1; prevMonth = m;
+            } else colSpan++;
+            if (idx === GANTT_DATA.all_days.length-1 && currentMonthTh) currentMonthTh.colSpan = colSpan;
         });
-        renderDashboard();
+        const rowDayNum = table.insertRow();
+        const thBlank = document.createElement('th'); thBlank.className = 'machine-col'; thBlank.textContent = ''; rowDayNum.appendChild(thBlank);
+        GANTT_DATA.all_days.forEach(d => {
+            const th = document.createElement('th'); th.className = 'day-num'; th.textContent = parseInt(d.split('-')[2]);
+            const dayOfWeek = new Date(d).getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 6) th.classList.add('wk');
+            else if (GANTT_DATA.holidays.includes(d)) th.classList.add('hol');
+            else if (GANTT_DATA.school_days.includes(d)) th.classList.add('sch');
+            else th.style.background = '#DCE6F1';
+            rowDayNum.appendChild(th);
+        });
+        const activeInterventions = getAllActiveInterventions();
+        GANTT_DATA.machines.forEach(machine => {
+            const mgSet = new Set(GANTT_DATA.data[machine].margin);
+            const isEastman = machine.startsWith('Eastman');
+            const row = table.insertRow();
+            const tdName = document.createElement('td'); tdName.className = 'machine-col'; tdName.textContent = machine; row.appendChild(tdName);
+            GANTT_DATA.all_days.forEach(d => {
+                const td = document.createElement('td'); td.className = 'cell';
+                const month = parseInt(d.split('-')[1]);
+                const interv = activeInterventions.find(i => i.machine === machine && i.date === d);
+                if (new Date(d).getDay() === 0 || new Date(d).getDay() === 6) td.classList.add('wk');
+                else if (GANTT_DATA.holidays.includes(d)) td.classList.add('hol');
+                else if (GANTT_DATA.school_days.includes(d)) td.classList.add('sch');
+                else if (isEastman && month === 6) td.classList.add('unavail');
+                else if (interv && interv.type === 'M') { td.classList.add('maint'); td.innerHTML = '<span class="lbl">M</span>'; }
+                else if (interv && interv.type === 'V') { td.classList.add('check'); td.innerHTML = '<span class="lbl">V</span>'; }
+                else if (mgSet.has(d)) td.classList.add('margin');
+                else td.classList.add('wd');
+                if (interv) { td.style.cursor = 'pointer'; td.addEventListener('click', (e) => { e.stopPropagation(); openInterventionDetails(interv); }); }
+                row.appendChild(td);
+            });
+        });
+        container.appendChild(table);
     }
-
-    initTabs();
+    function buildLegendStatic() {
+        const legendDiv = document.getElementById("legendContainer"); if(!legendDiv) return;
+        legendDiv.innerHTML = `<div class="leg-item"><div class="leg-sq" style="background:#FF6B35"></div> Maintenance (M) - cliquable</div><div class="leg-item"><div class="leg-sq" style="background:#9B59B6"></div> Vérif. visuelle (V) - cliquable</div><div class="leg-item"><div class="leg-sq" style="background:#90EE90"></div> Marge ±2 jours</div><div class="leg-item"><div class="leg-sq" style="background:#4472C4"></div> École / fermeture</div><div class="leg-item"><div class="leg-sq" style="background:#FFB3B3"></div> Férié / Pont</div><div class="leg-item"><div class="leg-sq" style="background:#FF0000"></div> Indispo Eastman (juin)</div><div class="leg-item"><div class="leg-sq" style="background:#D9D9D9"></div> Week-end</div>`;
+    }
+    function renderAllInterventionsListInContainer(container) {
+        const active = getAllActiveInterventions(); active.sort((a,b)=>a.date.localeCompare(b.date));
+        if (active.length===0) { container.innerHTML='<div class="empty-state">Aucune intervention active.</div>'; return; }
+        let html=`<table style="width:100%; margin-top:16px;"><thead><th>Machine</th><th>Date</th><th>Type</th><th>Source</th><th>Matériel</th><th>Temps</th><th>Actions</th></thead><tbody>`;
+        active.forEach(inter=>{ const details=getInterventionDetails(inter.id); html+=`<tr style="cursor:pointer" onclick='openInterventionDetails(${JSON.stringify(inter).replace(/'/g,"&#39;")})'>}<td>${inter.machine}</td><td>${new Date(inter.date).toLocaleDateString('fr-FR')}</td><td>${inter.type==='M'?'Maintenance':'Vérification visuelle'}</td><td>${inter.source==='fixe'?'Fixe':'Ajoutée'}</td><td>${details.materiel||'-'}</td><td>${details.temps||'-'}</td><td><button class="btn-sm btn-secondary" onclick="event.stopPropagation(); deleteIntervention('${inter.id}','${inter.source}',${inter.source==='perso'?inter.originalId:'null'})">🗑️ Supprimer</button></td>`; });
+        html+=`</tbody></table>`; container.innerHTML=html;
+    }
+    function renderPlanningGanttWithCustom() {
+        const machines = getData(STORAGE.equipements).map(e=>e.nom);
+        const html=`<div class="card"><div class="card-header">➕ Ajouter une intervention personnalisée</div><div class="card-body"><div class="form-row"><div><label>Machine :</label><select id="customMachineSelect">${machines.map(m=>`<option value="${m}">${m}</option>`).join('')}</select></div><div><label>Date :</label><input type="date" id="customDate" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Type :</label><select id="customType"><option value="M">Maintenance (M)</option><option value="V">Vérification visuelle (V)</option></select></div></div><button id="btnAddCustomIntervention">📌 Ajouter l'intervention</button></div></div><div class="card"><div class="card-header">📅 Planning Gantt - Maintenance Préventive (cliquez sur M ou V)</div><div class="card-body"><div class="gantt-wrapper" id="ganttContainer"></div><div class="legend" id="legendContainer"></div></div></div><div class="card"><div class="card-header">📋 Gestion complète des interventions</div><div class="card-body"><button id="btnShowAllInterventions" class="btn-secondary">Voir / Supprimer toutes les interventions</button><div id="allInterventionsContainer" style="margin-top:16px;"></div></div></div>`;
+        document.getElementById("maintTabContent").innerHTML=html;
+        setTimeout(()=>{
+            buildGanttTableWithCustom(); buildLegendStatic();
+            document.getElementById("btnAddCustomIntervention")?.addEventListener("click",()=>{ const machine=document.getElementById("customMachineSelect").value; const date=document.getElementById("customDate").value; const type=document.getElementById("customType").value; if(!machine||!date){alert("Veuillez remplir tous les champs."); return;} addIntervention(machine,date,type); });
+            document.getElementById("btnShowAllInterventions")?.addEventListener("click",()=>{ const container=document.getElementById("allInterventionsContainer"); if(container) renderAllInterventionsListInContainer(container); });
+        },10);
+    }
+    function stockFull() { let data = getData(STORAGE.pieces); return `<div class="card"><div class="card-header">Stock</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Stock</th><th>Seuil</th><th>Actions</th></thead><tbody>${data.map(p=>`<tr><td>${p.nom}</td><td>${p.ref}</td><td>${p.stock}</td><td>${p.seuil}</td><td><button class="btn-sm" onclick="ajusterStock(${p.id})">📦</button><button class="btn-sm" onclick="editPiece(${p.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deletePiece(${p.id})">🗑️</button></td>`).join('')}</tbody></table><button onclick="openPieceModal()">+ Pièce</button></div></div>`; }
+    function achatsFull() { let data = getData(STORAGE.fournisseurs); return `<div class="card"><div class="card-header">Fournisseurs</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Contact</th><th>Actions</th></thead><tbody>${data.map(f=>`<tr><td>${f.nom}</td><td>${f.contact||'-'}</td><td><button class="btn-sm" onclick="editFournisseur(${f.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deleteFournisseur(${f.id})">🗑️</button></td>`).join('')}</tbody></table><button onclick="openFournisseurModal()">+ Fournisseur</button></div></div>`; }
+    function gammesFull() { const storageKey = currentGammeType === 'op' ? STORAGE.gammesOp : STORAGE.gammesMaint; const gammes = getData(storageKey); const machinesUniques = getData(STORAGE.equipements).map(e=>e.nom); let html = `<div class="card"><div class="card-header">Gammes ${currentGammeType === 'op' ? 'Opérateurs' : 'Maintenance'}</div><div class="card-body"><div class="gamme-switch"><button id="switchToOp" class="btn-sm ${currentGammeType === 'op' ? '' : 'btn-secondary'}">👤 Gamme Opérateur</button><button id="switchToMaint" class="btn-sm ${currentGammeType === 'maint' ? '' : 'btn-secondary'}">🔧 Gamme Maintenance</button></div>${machinesUniques.map(m => { const etapes = gammes[m] || []; return `<div class="machine-gamme"><strong>${m}</strong> : ${etapes.length} étapes<ul>${etapes.map(e=>`<li>${e}</li>`).join('')}</ul><button class="btn-sm" onclick="editGammePrompt('${m}')">✏️ Modifier</button></div>`; }).join('')}</div></div>`; return html; }
+    function renderGestionUtilisateurs() {
+        let users = getData(STORAGE.users);
+        if (!users.length) users = [{ id: "admin", name: "Administrateur", role: "admin" }];
+        let html = `<div class="card"><div class="card-header">👥 Gestion des utilisateurs (simplifiée)</div><div class="card-body"><p>Cette version ne gère pas l'authentification. Vous pouvez ajouter des utilisateurs pour information.</p><button id="btnAddUser">+ Ajouter un utilisateur</button><table style="margin-top:16px; width:100%"><thead><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Actions</th></thead><tbody>${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.id)}</td><td>${u.role}</td><td><button class="btn-sm btn-secondary" onclick="deleteUser('${u.id}')">🗑️ Supprimer</button></td>`).join('')}</tbody></table></div></div>`;
+        document.getElementById("maintTabContent").innerHTML = html;
+        document.getElementById("btnAddUser")?.addEventListener("click", () => { let name = prompt("Nom complet"); if(name){ let id = prompt("Identifiant (login)"); if(id){ let role = prompt("Rôle (admin, user)", "user"); let users = getData(STORAGE.users); users.push({ id, name, role }); setData(STORAGE.users, users); renderGestionUtilisateurs(); } } });
+        window.deleteUser = (id) => { let users = getData(STORAGE.users).filter(u => u.id !== id); setData(STORAGE.users, users); renderGestionUtilisateurs(); };
+    }
+    function renderConsommables() {
+        const machines = getData(STORAGE.equipements).map(e => e.nom);
+        const consos = getConsommables();
+        let formHtml = `<div class="card"><div class="card-header">➕ Ajouter un suivi consommable</div><div class="card-body"><div class="form-row"><div><label>Machine :</label><select id="consoMachine">${machines.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div><div><label>Nom pièce :</label><input id="consoNom" placeholder="Ex: Filtre hydraulique"></div><div><label>Référence :</label><input id="consoRef" placeholder="Ex: FH-2100"></div><div><label>Durée (jours) :</label><input id="consoDuree" type="number" min="1" value="30"></div></div><button id="btnAjouterConsommable">📌 Ajouter le suivi</button></div></div>`;
+        let listeHtml = `<div class="card"><div class="card-header">📋 Liste des suivis consommables</div><div class="card-body">`;
+        if (consos.length === 0) listeHtml += `<div class="empty-state">Aucun consommable enregistré.</div>`;
+        else {
+            listeHtml += `<table style="width:100%"><thead><th>Machine</th><th>Pièce</th><th>Référence</th><th>Début</th><th>Alerte commande</th><th>Alerte installation</th><th>Actions</th></thead><tbody>`;
+            consos.forEach(c => {
+                const dateCmd = new Date(c.dateAlerteCommande).toLocaleDateString('fr-FR');
+                const dateInst = new Date(c.dateAlerteInstall).toLocaleDateString('fr-FR');
+                listeHtml += `<tr><td>${c.machine}</td><td>${c.nomPiece}</td><td>${c.reference}</td><td>${new Date(c.dateDebut).toLocaleDateString('fr-FR')}</td><td>${dateCmd} ${c.alerteCommandeEnvoyee ? '✔️' : '⏳'}</td><td>${dateInst} ${c.alerteInstallEnvoyee ? '✔️' : '⏳'}</td><td><button class="btn-sm btn-secondary" onclick="supprimerConsommable(${c.id})">🗑️ Supprimer</button></td>`);
+            });
+            listeHtml += `</tbody></table>`;
+        }
+        listeHtml += `</div></div>`;
+        let calendrierHtml = `<div class="card"><div class="card-header">📅 Mini‑calendrier des alertes</div><div class="card-body"><div class="calendrier-mini">`;
+        if (consos.length === 0) calendrierHtml += `<div class="empty-state">Aucune alerte à afficher.</div>`;
+        else {
+            const today = new Date();
+            consos.forEach(c => {
+                const dateCmd = new Date(c.dateAlerteCommande);
+                const dateInst = new Date(c.dateAlerteInstall);
+                let classe = "";
+                if (dateCmd <= today) classe = "alert-commande";
+                else if (dateInst <= today) classe = "alert-install";
+                calendrierHtml += `<div class="consom-card ${classe}"><h4>🔩 ${c.nomPiece} (${c.reference})</h4><div><strong>Machine :</strong> ${c.machine}</div><div class="date-alerte">📆 Commande : ${dateCmd.toLocaleDateString('fr-FR')}</div><div class="date-alerte">🔧 Installation : ${dateInst.toLocaleDateString('fr-FR')}</div><div>📅 Début compteur : ${new Date(c.dateDebut).toLocaleDateString('fr-FR')}</div></div>`;
+            });
+        }
+        calendrierHtml += `</div></div></div>`;
+        document.getElementById("maintTabContent").innerHTML = formHtml + listeHtml + calendrierHtml;
+        document.getElementById("btnAjouterConsommable")?.addEventListener("click", () => {
+            const machine = document.getElementById("consoMachine").value;
+            const nom = document.getElementById("consoNom").value.trim();
+            const ref = document.getElementById("consoRef").value.trim();
+            const duree = parseInt(document.getElementById("consoDuree").value);
+            if (!machine || !nom || !ref || isNaN(duree) || duree < 1) { alert("Veuillez remplir tous les champs correctement."); return; }
+            ajouterConsommable(machine, nom, ref, duree);
+            renderConsommables();
+        });
+    }
+    function renderHistoriquePannes(container) {
+        let historique = getHistorique();
+        let filterText = '';
+        const render = () => {
+            const searchTerm = filterText.toLowerCase();
+            const filtered = historique.filter(h => h.machine.toLowerCase().includes(searchTerm) || h.piece.toLowerCase().includes(searchTerm) || h.description.toLowerCase().includes(searchTerm));
+            container.innerHTML = `
+                <div class="card"><div class="card-header">📸 Ajouter une panne à l'historique (photo + pièce)</div><div class="card-body"><div class="form-row"><div><label>Machine :</label><select id="histMachine">${getData(STORAGE.equipements).map(e=>`<option value="${e.nom}">${e.nom}</option>`).join('')}</select></div><div><label>Nom de la pièce (mot-clé) :</label><input type="text" id="histPiece" placeholder="ex: Courroie, Moteur..."></div></div><label>Description détaillée :</label><textarea id="histDescription" rows="2" placeholder="Cause, remède, remarques..."></textarea><label>Photo (appareil ou galerie) :</label><input type="file" id="histPhoto" accept="image/*" capture="environment"><div id="photoPreview"></div><button id="btnSaveHistorique">📌 Ajouter à l'historique</button></div></div>
+                <div class="card"><div class="card-header">🔍 Recherche (pièce, machine, description)</div><div class="card-body"><input type="text" id="searchHistorique" placeholder="🔎 Ex: Courroie, Biesse..." class="search-bar"></div></div>
+                <div class="card"><div class="card-header" id="historiqueCountHeader">📜 Historique des pannes (${filtered.length} entrées)</div><div class="card-body"><div class="historique-grid">${filtered.length === 0 ? '<div class="empty-state">Aucune panne historique trouvée.</div>' : filtered.map(pan => `<div class="panne-card">${pan.imageBase64 ? `<img src="${pan.imageBase64}" class="panne-image">` : '<div class="panne-image" style="background:#eef2f5; display:flex; align-items:center; justify-content:center;">📷</div>'}<div class="panne-infos"><strong>🖥️ ${escapeHtml(pan.machine)}</strong> &nbsp;| 🔧 Pièce: <strong>${escapeHtml(pan.piece)}</strong><br>📅 ${new Date(pan.date).toLocaleString('fr-FR')}<br><strong>Description :</strong><br> ${escapeHtml(pan.description)}<br><button class="btn-sm btn-secondary" onclick="supprimerHistorique(${pan.id})">🗑️ Supprimer</button></div></div>`).join('')}</div></div></div>
+            `;
+            document.getElementById("searchHistorique")?.addEventListener("input", (e) => { filterText = e.target.value; render(); });
+            document.getElementById("btnSaveHistorique")?.addEventListener("click", async () => {
+                const machine = document.getElementById("histMachine").value;
+                const piece = document.getElementById("histPiece").value.trim();
+                const description = document.getElementById("histDescription").value.trim();
+                if (!machine || !piece || !description) { alert("Veuillez remplir machine, pièce et description."); return; }
+                const fileInput = document.getElementById("histPhoto");
+                let imageBase64 = null;
+                if (fileInput.files && fileInput.files[0]) {
+                    imageBase64 = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(fileInput.files[0]);
+                    });
+                }
+                addHistorique(machine, piece, description, imageBase64);
+                historique = getHistorique();
+                document.getElementById("histPiece").value = "";
+                document.getElementById("histDescription").value = "";
+                document.getElementById("histPhoto").value = "";
+                document.getElementById("photoPreview").innerHTML = "";
+                render();
+            });
+            document.getElementById("histPhoto")?.addEventListener("change", (e) => {
+                const preview = document.getElementById("photoPreview");
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => { preview.innerHTML = `<img src="${ev.target.result}" class="photo-preview" style="max-width:100px;">`; };
+                    reader.readAsDataURL(e.target.files[0]);
+                } else preview.innerHTML = "";
+            });
+        };
+        render();
+        window.supprimerHistorique = (id) => { if(confirm("Supprimer cette entrée ?")) { deleteHistorique(id); historique = getHistorique(); render(); } };
+    }
+    
+    function refreshMaintenanceViews() {
+        if (currentMaintTab === 'preventif') { if (document.getElementById("ganttContainer")) buildGanttTableWithCustom(); if (document.getElementById("legendContainer")) buildLegendStatic(); const container = document.getElementById("allInterventionsContainer"); if (container && container.innerHTML !== "") renderAllInterventionsListInContainer(container); }
+        if (currentMaintTab === 'dashboard') renderDashboardMaintenance();
+        if (currentMaintTab === 'consommables') renderConsommables();
+        if (currentMaintTab === 'historique') { const container = document.getElementById("maintTabContent"); if(container) renderHistoriquePannes(container); }
+        if (currentMaintTab === 'equipements') renderEquipements();
+        if (currentMaintTab === 'stock') document.getElementById("maintTabContent").innerHTML = stockFull();
+        if (currentMaintTab === 'achats') document.getElementById("maintTabContent").innerHTML = achatsFull();
+        if (currentMaintTab === 'gammes') document.getElementById("maintTabContent").innerHTML = gammesFull();
+        if (currentMaintTab === 'users') renderGestionUtilisateurs();
+    }
+    
+    function renderMaintenance() {
+        let html = `<div style="display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap;"><button class="reset-btn" onclick="resetGamme('op')">🔄 Réinit. gamme opérateur</button><button class="reset-btn" onclick="resetGamme('maint')">🔄 Réinit. gamme maintenance</button><button class="reset-btn" onclick="resetStock()">🔄 Réinit. stock</button></div><div class="tabs" id="maintTabs"><button class="tab-btn" data-tab="dashboard">📊 Dashboard</button><button class="tab-btn" data-tab="equipements">🖥️ Équipements</button><button class="tab-btn" data-tab="preventif">📅 Planning Gantt & Interventions</button><button class="tab-btn" data-tab="stock">📦 Stock</button><button class="tab-btn" data-tab="achats">🛒 Achats</button><button class="tab-btn" data-tab="gammes">📋 Gammes</button><button class="tab-btn" data-tab="users">👥 Gestion utilisateurs</button><button class="tab-btn" data-tab="consommables">⏳ Consommables</button><button class="tab-btn" data-tab="historique">📸 Historique Pannes</button></div><div id="maintTabContent"></div>`;
+        document.getElementById("tabContents").innerHTML = html;
+        function loadTab(tabId) {
+            currentMaintTab = tabId;
+            if(tabId === "dashboard") renderDashboardMaintenance();
+            else if(tabId === "equipements") renderEquipements();
+            else if(tabId === "preventif") renderPlanningGanttWithCustom();
+            else if(tabId === "stock") document.getElementById("maintTabContent").innerHTML = stockFull();
+            else if(tabId === "achats") document.getElementById("maintTabContent").innerHTML = achatsFull();
+            else if(tabId === "gammes") document.getElementById("maintTabContent").innerHTML = gammesFull();
+            else if(tabId === "users") renderGestionUtilisateurs();
+            else if(tabId === "consommables") renderConsommables();
+            else if(tabId === "historique") renderHistoriquePannes(document.getElementById("maintTabContent"));
+        }
+        const btns = document.querySelectorAll("#maintTabs .tab-btn");
+        btns.forEach(btn => {
+            btn.addEventListener("click", () => { btns.forEach(b => b.classList.remove("active")); btn.classList.add("active"); loadTab(btn.getAttribute("data-tab")); if(btn.getAttribute("data-tab") === "gammes") setTimeout(()=>attachGammeEvents(), 20); });
+            if(btn.getAttribute("data-tab") === currentMaintTab) btn.classList.add("active");
+        });
+        loadTab(currentMaintTab);
+        if(currentMaintTab === "gammes") setTimeout(attachGammeEvents, 50);
+        function attachGammeEvents() {
+            const switchOp = document.getElementById("switchToOp");
+            const switchMaint = document.getElementById("switchToMaint");
+            if(switchOp) switchOp.addEventListener("click",()=>{ currentGammeType="op"; renderMaintenance(); });
+            if(switchMaint) switchMaint.addEventListener("click",()=>{ currentGammeType="maint"; renderMaintenance(); });
+        }
+    }
+    
+    // ==================== FONCTIONS GLOBALES ====================
+    window.resoudrePanneMaintenance = (id) => {
+        let pannes = getData(STORAGE.pannes);
+        let panne = pannes.find(p => p.id === id);
+        if(panne && panne.statut !== "Résolu") {
+            panne.statut = "Résolu"; panne.dateResolution = new Date().toISOString();
+            setData(STORAGE.pannes, pannes);
+            const autresPannes = pannes.filter(p => p.equipementId === panne.equipementId && p.statut !== "Résolu" && p.id !== id);
+            if (autresPannes.length === 0) { let eq = getData(STORAGE.equipements).map(e => e.id === panne.equipementId ? { ...e, statut: "En fonctionnement" } : e); setData(STORAGE.equipements, eq); }
+            if (!getData(STORAGE.pannes).some(p => p.statut !== "Résolu")) setData(STORAGE.alertePanneIgnored, false);
+            alert("Panne résolue."); renderMaintenance();
+        } else alert("Déjà résolue.");
+    };
+    window.editGammePrompt = (machine) => {
+        const storageKey = currentGammeType === 'op' ? STORAGE.gammesOp : STORAGE.gammesMaint;
+        let gammes = getData(storageKey);
+        let current = gammes[machine] || [];
+        let newEtapes = prompt("Modifier les étapes (séparées par des virgules) :", current.join(", "));
+        if (newEtapes !== null) { gammes[machine] = newEtapes.split(",").map(s=>s.trim()).filter(s=>s); setData(storageKey, gammes); renderMaintenance(); }
+    };
+    window.ajusterStock = (id) => { let pieces = getData(STORAGE.pieces); let p = pieces.find(p=>p.id===id); if(p){ let q = prompt("Nouveau stock", p.stock); if(q!==null){ p.stock = parseInt(q); setData(STORAGE.pieces, pieces); renderMaintenance(); } } };
+    window.resetGamme = (type) => { const machine = prompt("Nom machine :"); if(machine && MACHINES_LIST.includes(machine)){ const key=type==='op'?STORAGE.gammesOp:STORAGE.gammesMaint; let g=getData(key); g[machine]=type==='op'?["Nettoyage général","Vérification visuelle","Test fonctionnement"]:["Inspection mécanique","Lubrification","Vérification électrique","Test final"]; setData(key,g); renderMaintenance(); } };
+    window.resetStock = () => { if(confirm("Remettre stock par défaut ?")){ setData(STORAGE.pieces,[{ id:1, nom:"Courroie trapézoïdale", ref:"CT-100", stock:12, seuil:5, fournisseurPref:"Catana" }]); renderMaintenance(); } };
+    window.openPieceModal = () => { showModal("Ajouter pièce", `<label>Nom:</label><input id="pieceNom"><label>Référence:</label><input id="pieceRef"><label>Stock:</label><input id="pieceStock" type="number"><label>Seuil:</label><input id="pieceSeuil" type="number"><label>Fournisseur:</label><input id="pieceFourn">`, () => { let pieces = getData(STORAGE.pieces); let newId = pieces.length?Math.max(...pieces.map(p=>p.id))+1:1; pieces.push({ id:newId, nom:document.getElementById("pieceNom").value, ref:document.getElementById("pieceRef").value, stock:parseInt(document.getElementById("pieceStock").value)||0, seuil:parseInt(document.getElementById("pieceSeuil").value)||0, fournisseurPref:document.getElementById("pieceFourn").value }); setData(STORAGE.pieces, pieces); renderMaintenance(); }); };
+    window.editPiece = (id) => { let pieces = getData(STORAGE.pieces); let p = pieces.find(p=>p.id===id); if(p) showModal("Modifier pièce", `<label>Nom:</label><input id="pieceNom" value="${p.nom}"><label>Référence:</label><input id="pieceRef" value="${p.ref}"><label>Stock:</label><input id="pieceStock" type="number" value="${p.stock}"><label>Seuil:</label><input id="pieceSeuil" type="number" value="${p.seuil}"><label>Fournisseur:</label><input id="pieceFourn" value="${p.fournisseurPref}">`, () => { p.nom = document.getElementById("pieceNom").value; p.ref = document.getElementById("pieceRef").value; p.stock = parseInt(document.getElementById("pieceStock").value); p.seuil = parseInt(document.getElementById("pieceSeuil").value); p.fournisseurPref = document.getElementById("pieceFourn").value; setData(STORAGE.pieces, pieces); renderMaintenance(); }); };
+    window.deletePiece = (id) => { if(confirm("Supprimer cette pièce ?")){ let list = getData(STORAGE.pieces).filter(p=>p.id!==id); setData(STORAGE.pieces, list); renderMaintenance(); } };
+    window.openFournisseurModal = () => { showModal("Ajouter fournisseur", `<label>Nom:</label><input id="fournNom"><label>Contact:</label><input id="fournContact"><label>Tél:</label><input id="fournTel"><label>Email:</label><input id="fournEmail">`, () => { let fours = getData(STORAGE.fournisseurs); let newId = fours.length?Math.max(...fours.map(f=>f.id))+1:1; fours.push({ id:newId, nom:document.getElementById("fournNom").value, contact:document.getElementById("fournContact").value, tel:document.getElementById("fournTel").value, email:document.getElementById("fournEmail").value }); setData(STORAGE.fournisseurs, fours); renderMaintenance(); }); };
+    window.editFournisseur = (id) => { let fours = getData(STORAGE.fournisseurs); let f = fours.find(f=>f.id===id); if(f) showModal("Modifier fournisseur", `<label>Nom:</label><input id="fournNom" value="${f.nom}"><label>Contact:</label><input id="fournContact" value="${f.contact||''}"><label>Tél:</label><input id="fournTel" value="${f.tel||''}"><label>Email:</label><input id="fournEmail" value="${f.email||''}">`, () => { f.nom = document.getElementById("fournNom").value; f.contact = document.getElementById("fournContact").value; f.tel = document.getElementById("fournTel").value; f.email = document.getElementById("fournEmail").value; setData(STORAGE.fournisseurs, fours); renderMaintenance(); }); };
+    window.deleteFournisseur = (id) => { if(confirm("Supprimer ce fournisseur ?")){ let list = getData(STORAGE.fournisseurs).filter(f=>f.id!==id); setData(STORAGE.fournisseurs, list); renderMaintenance(); } };
+    window.supprimerConsommable = (id) => { if (confirm("Supprimer ce suivi consommable ?")) { supprimerConsommable(id); if (currentMaintTab === 'consommables') renderConsommables(); } };
+    
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+    
+    // Lancement
+    renderMaintenance();
+    document.getElementById("modalSaveInterventionBtn")?.addEventListener("click", saveCurrentInterventionDetails);
 </script>
 </body>
 </html>
