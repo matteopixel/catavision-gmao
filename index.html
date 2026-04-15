@@ -85,6 +85,7 @@
         .alert-install { background: #fff8e1; color: #f57f17; }
         .install-banner { background: #2c5a6e; color: white; text-align: center; padding: 12px; border-radius: 40px; margin-bottom: 20px; cursor: pointer; }
         @media (max-width: 780px) { .header { flex-direction: column; text-align: center; } .stats-grid { grid-template-columns: 1fr 1fr; } .panne-card { flex-direction: column; } .panne-image { width: 100%; height: auto; max-height: 180px; } }
+        #errorMsg { background: #ffdddd; color: red; padding: 10px; margin: 10px; border-radius: 20px; display: none; }
     </style>
 </head>
 <body>
@@ -96,40 +97,18 @@
     <div id="tabContents"></div>
     <div class="footer">GMAO intégrale – Stockage local (localStorage)</div>
 </div>
+<div id="errorMsg"></div>
 
-<!-- MODAL INTERVENTION -->
-<div id="interventionModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header"><h3>Détails de l'intervention</h3><button class="close-modal" onclick="closeInterventionModal()">&times;</button></div>
-        <div id="modalInterventionBody">
-            <label>Machine :</label><span id="modalMachine"></span>
-            <label>Date :</label><span id="modalDate"></span>
-            <label>Type :</label><span id="modalType"></span>
-            <label>Matériel nécessaire :</label><input type="text" id="modalMateriel" placeholder="ex: roulements, graisse">
-            <label>Temps d'intervention :</label><input type="text" id="modalTemps" placeholder="ex: 2h30">
-            <label>Gamme de maintenance :</label><div id="modalGamme" class="gamme-preview"></div>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
-            <button class="btn-secondary" onclick="closeInterventionModal()">Annuler</button>
-            <button id="modalSaveInterventionBtn">Enregistrer</button>
-        </div>
-    </div>
-</div>
-
-<!-- MODALE GLOBALE -->
-<div id="globalModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header"><h3 id="modalTitle">Titre</h3><button class="close-modal" onclick="closeModal()">&times;</button></div>
-        <div id="modalBody"></div>
-        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
-            <button class="btn-secondary" onclick="closeModal()">Annuler</button>
-            <button id="modalSaveBtn">Enregistrer</button>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+    // Afficher les erreurs dans la page
+    window.onerror = function(msg, url, line, col, error) {
+        var errorMsg = document.getElementById('errorMsg');
+        errorMsg.style.display = 'block';
+        errorMsg.innerHTML = 'Erreur : ' + msg + ' (ligne ' + line + ')';
+        console.error(msg, error);
+        return false;
+    };
+
     // ==================== STORAGE ====================
     const STORAGE = { 
         equipements: 'catavision_equipements', pieces: 'catavision_pieces', fournisseurs: 'catavision_fournisseurs', commandes: 'catavision_commandes', preventifs: 'catavision_preventifs', pannes: 'catavision_pannes', gammesOp: 'catavision_gammes_operateurs', gammesMaint: 'catavision_gammes_maintenance', signaux: 'catavision_signaux', lastOpReport: 'catavision_last_op_report', interventionsPerso: 'catavision_interventions_perso', excludedInterventions: 'catavision_excluded_interventions', interventionDetails: 'catavision_intervention_details', alertePanneIgnored: 'catavision_alerte_panne_ignoree',
@@ -142,7 +121,7 @@
     const MACHINES_LIST = ["Biesse 1","Biesse 2","Biesse 3","Biesse 4","Biesse 5","Biesse 6","Jade 240","Stream A","Eastman 1","Eastman 2"];
     const GANTT_DATA = {
         machines: MACHINES_LIST,
-        all_days: (() => { let dates = []; let start = new Date(2026, 3, 7); let end = new Date(2026, 6, 31); for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10)); return dates; })(),
+        all_days: (function() { let dates = []; let start = new Date(2026, 3, 7); let end = new Date(2026, 6, 31); for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) dates.push(d.toISOString().slice(0,10)); return dates; })(),
         school_days: ["2026-06-10","2026-06-08","2026-06-12","2026-06-15","2026-06-19","2026-06-09","2026-06-18","2026-06-17","2026-06-16","2026-06-11"],
         holidays: ["2026-05-14","2026-04-30","2026-05-11","2026-05-01","2026-05-25","2026-05-08","2026-05-15"],
         data: {
@@ -335,7 +314,7 @@
     function renderEquipements() { 
         const equipements = getData(STORAGE.equipements);
         const container = document.getElementById("maintTabContent");
-        let html = `<div class="card"><div class="card-header">🖥️ Liste des équipements</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Localisation</th><th>Mise en service</th><th>Statut</th><th>Actions</th></thead><tbody>${equipements.map(e => `<tr data-id="${e.id}"><td>${escapeHtml(e.nom)}</td><td>${escapeHtml(e.ref)}</td><td>${escapeHtml(e.localisation)}</td><td>${escapeHtml(e.miseService)}</td><td>${escapeHtml(e.statut)}</td><td><button class="btn-sm edit-equipement" data-id="${e.id}">✏️ Modifier</button><button class="btn-sm btn-secondary delete-equipement" data-id="${e.id}">🗑️ Supprimer</button></td>`).join('')}</tbody></table><button id="addEquipementBtn" style="margin-top:16px;">+ Ajouter un équipement</button></div></div>`;
+        let html = `<div class="card"><div class="card-header">🖥️ Liste des équipements</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Localisation</th><th>Mise en service</th><th>Statut</th><th>Actions</th></thead><tbody>${equipements.map(e => `<tr data-id="${e.id}"><td>${escapeHtml(e.nom)}</td><td>${escapeHtml(e.ref)}</td><td>${escapeHtml(e.localisation)}</td><td>${escapeHtml(e.miseService)}</td><td>${escapeHtml(e.statut)}</td><td><button class="btn-sm edit-equipement" data-id="${e.id}">✏️ Modifier</button><button class="btn-sm btn-secondary delete-equipement" data-id="${e.id}">🗑️ Supprimer</button></td></tr>`).join('')}</tbody></table><button id="addEquipementBtn" style="margin-top:16px;">+ Ajouter un équipement</button></div></div>`;
         container.innerHTML = html;
         document.querySelectorAll('.edit-equipement').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.getAttribute('data-id')); const equip = equipements.find(e => e.id === id); if (equip) openEquipementModal(equip); }));
         document.querySelectorAll('.delete-equipement').forEach(btn => btn.addEventListener('click', (e) => { const id = parseInt(btn.getAttribute('data-id')); if (confirm("Supprimer définitivement cet équipement ?")) { let list = getData(STORAGE.equipements).filter(e => e.id !== id); setData(STORAGE.equipements, list); renderEquipements(); } }));
@@ -430,7 +409,7 @@
         const active = getAllActiveInterventions(); active.sort((a,b)=>a.date.localeCompare(b.date));
         if (active.length===0) { container.innerHTML='<div class="empty-state">Aucune intervention active.</div>'; return; }
         let html=`<table style="width:100%; margin-top:16px;"><thead><th>Machine</th><th>Date</th><th>Type</th><th>Source</th><th>Matériel</th><th>Temps</th><th>Actions</th></thead><tbody>`;
-        active.forEach(inter=>{ const details=getInterventionDetails(inter.id); html+=`<tr style="cursor:pointer" onclick='openInterventionDetails(${JSON.stringify(inter).replace(/'/g,"&#39;")})'>}<td>${inter.machine}</td><td>${new Date(inter.date).toLocaleDateString('fr-FR')}</td><td>${inter.type==='M'?'Maintenance':'Vérification visuelle'}</td><td>${inter.source==='fixe'?'Fixe':'Ajoutée'}</td><td>${details.materiel||'-'}</td><td>${details.temps||'-'}</td><td><button class="btn-sm btn-secondary" onclick="event.stopPropagation(); deleteIntervention('${inter.id}','${inter.source}',${inter.source==='perso'?inter.originalId:'null'})">🗑️ Supprimer</button></td>`; });
+        active.forEach(inter=>{ const details=getInterventionDetails(inter.id); html+=`<tr style="cursor:pointer" onclick='openInterventionDetails(${JSON.stringify(inter).replace(/'/g,"&#39;")})'>}<td>${inter.machine}</td><td>${new Date(inter.date).toLocaleDateString('fr-FR')}</td><td>${inter.type==='M'?'Maintenance':'Vérification visuelle'}</td><td>${inter.source==='fixe'?'Fixe':'Ajoutée'}</td><td>${details.materiel||'-'}</td><td>${details.temps||'-'}</td><td><button class="btn-sm btn-secondary" onclick="event.stopPropagation(); deleteIntervention('${inter.id}','${inter.source}',${inter.source==='perso'?inter.originalId:'null'})">🗑️ Supprimer</button></td></tr>`; });
         html+=`</tbody></table>`; container.innerHTML=html;
     }
     function renderPlanningGanttWithCustom() {
@@ -443,13 +422,13 @@
             document.getElementById("btnShowAllInterventions")?.addEventListener("click",()=>{ const container=document.getElementById("allInterventionsContainer"); if(container) renderAllInterventionsListInContainer(container); });
         },10);
     }
-    function stockFull() { let data = getData(STORAGE.pieces); return `<div class="card"><div class="card-header">Stock</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Stock</th><th>Seuil</th><th>Actions</th></thead><tbody>${data.map(p=>`<tr><td>${p.nom}</td><td>${p.ref}</td><td>${p.stock}</td><td>${p.seuil}</td><td><button class="btn-sm" onclick="ajusterStock(${p.id})">📦</button><button class="btn-sm" onclick="editPiece(${p.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deletePiece(${p.id})">🗑️</button></td>`).join('')}</tbody></table><button onclick="openPieceModal()">+ Pièce</button></div></div>`; }
-    function achatsFull() { let data = getData(STORAGE.fournisseurs); return `<div class="card"><div class="card-header">Fournisseurs</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Contact</th><th>Actions</th></thead><tbody>${data.map(f=>`<tr><td>${f.nom}</td><td>${f.contact||'-'}</td><td><button class="btn-sm" onclick="editFournisseur(${f.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deleteFournisseur(${f.id})">🗑️</button></td>`).join('')}</tbody></table><button onclick="openFournisseurModal()">+ Fournisseur</button></div></div>`; }
+    function stockFull() { let data = getData(STORAGE.pieces); return `<div class="card"><div class="card-header">Stock</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Référence</th><th>Stock</th><th>Seuil</th><th>Actions</th></thead><tbody>${data.map(p=>`<tr><td>${p.nom}</td><td>${p.ref}</td><td>${p.stock}</td><td>${p.seuil}</td><td><button class="btn-sm" onclick="ajusterStock(${p.id})">📦</button><button class="btn-sm" onclick="editPiece(${p.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deletePiece(${p.id})">🗑️</button></td></tr>`).join('')}</tbody></table><button onclick="openPieceModal()">+ Pièce</button></div></div>`; }
+    function achatsFull() { let data = getData(STORAGE.fournisseurs); return `<div class="card"><div class="card-header">Fournisseurs</div><div class="card-body"><table style="width:100%"><thead><th>Nom</th><th>Contact</th><th>Actions</th></thead><tbody>${data.map(f=>`<tr><td>${f.nom}</td><td>${f.contact||'-'}</td><td><button class="btn-sm" onclick="editFournisseur(${f.id})">✏️</button><button class="btn-sm btn-secondary" onclick="deleteFournisseur(${f.id})">🗑️</button></td></tr>`).join('')}</tbody></table><button onclick="openFournisseurModal()">+ Fournisseur</button></div></div>`; }
     function gammesFull() { const storageKey = currentGammeType === 'op' ? STORAGE.gammesOp : STORAGE.gammesMaint; const gammes = getData(storageKey); const machinesUniques = getData(STORAGE.equipements).map(e=>e.nom); let html = `<div class="card"><div class="card-header">Gammes ${currentGammeType === 'op' ? 'Opérateurs' : 'Maintenance'}</div><div class="card-body"><div class="gamme-switch"><button id="switchToOp" class="btn-sm ${currentGammeType === 'op' ? '' : 'btn-secondary'}">👤 Gamme Opérateur</button><button id="switchToMaint" class="btn-sm ${currentGammeType === 'maint' ? '' : 'btn-secondary'}">🔧 Gamme Maintenance</button></div>${machinesUniques.map(m => { const etapes = gammes[m] || []; return `<div class="machine-gamme"><strong>${m}</strong> : ${etapes.length} étapes<ul>${etapes.map(e=>`<li>${e}</li>`).join('')}</ul><button class="btn-sm" onclick="editGammePrompt('${m}')">✏️ Modifier</button></div>`; }).join('')}</div></div>`; return html; }
     function renderGestionUtilisateurs() {
         let users = getData(STORAGE.users);
         if (!users.length) users = [{ id: "admin", name: "Administrateur", role: "admin" }];
-        let html = `<div class="card"><div class="card-header">👥 Gestion des utilisateurs (simplifiée)</div><div class="card-body"><p>Cette version ne gère pas l'authentification. Vous pouvez ajouter des utilisateurs pour information.</p><button id="btnAddUser">+ Ajouter un utilisateur</button><table style="margin-top:16px; width:100%"><thead><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Actions</th></thead><tbody>${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.id)}</td><td>${u.role}</td><td><button class="btn-sm btn-secondary" onclick="deleteUser('${u.id}')">🗑️ Supprimer</button></td>`).join('')}</tbody></table></div></div>`;
+        let html = `<div class="card"><div class="card-header">👥 Gestion des utilisateurs (simplifiée)</div><div class="card-body"><p>Cette version ne gère pas l'authentification. Vous pouvez ajouter des utilisateurs pour information.</p><button id="btnAddUser">+ Ajouter un utilisateur</button><table style="margin-top:16px; width:100%"><thead><th>Nom</th><th>Identifiant</th><th>Rôle</th><th>Actions</th></thead><tbody>${users.map(u => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.id)}</td><td>${u.role}</td><td><button class="btn-sm btn-secondary" onclick="deleteUser('${u.id}')">🗑️ Supprimer</button></td></tr>`).join('')}</tbody></table></div></div>`;
         document.getElementById("maintTabContent").innerHTML = html;
         document.getElementById("btnAddUser")?.addEventListener("click", () => { let name = prompt("Nom complet"); if(name){ let id = prompt("Identifiant (login)"); if(id){ let role = prompt("Rôle (admin, user)", "user"); let users = getData(STORAGE.users); users.push({ id, name, role }); setData(STORAGE.users, users); renderGestionUtilisateurs(); } } });
         window.deleteUser = (id) => { let users = getData(STORAGE.users).filter(u => u.id !== id); setData(STORAGE.users, users); renderGestionUtilisateurs(); };
@@ -465,7 +444,7 @@
             consos.forEach(c => {
                 const dateCmd = new Date(c.dateAlerteCommande).toLocaleDateString('fr-FR');
                 const dateInst = new Date(c.dateAlerteInstall).toLocaleDateString('fr-FR');
-                listeHtml += `<tr><td>${c.machine}</td><td>${c.nomPiece}</td><td>${c.reference}</td><td>${new Date(c.dateDebut).toLocaleDateString('fr-FR')}</td><td>${dateCmd} ${c.alerteCommandeEnvoyee ? '✔️' : '⏳'}</td><td>${dateInst} ${c.alerteInstallEnvoyee ? '✔️' : '⏳'}</td><td><button class="btn-sm btn-secondary" onclick="supprimerConsommable(${c.id})">🗑️ Supprimer</button></td>`);
+                listeHtml += `<tr><td>${c.machine}</td><td>${c.nomPiece}</td><td>${c.reference}</td><td>${new Date(c.dateDebut).toLocaleDateString('fr-FR')}</td><td>${dateCmd} ${c.alerteCommandeEnvoyee ? '✔️' : '⏳'}</td><td>${dateInst} ${c.alerteInstallEnvoyee ? '✔️' : '⏳'}</td><td><button class="btn-sm btn-secondary" onclick="supprimerConsommable(${c.id})">🗑️ Supprimer</button></td></tr>`;
             });
             listeHtml += `</tbody></table>`;
         }
